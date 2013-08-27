@@ -1,0 +1,14 @@
+checkPeriod: checkPeriod.o sgp4unit.o sgp4io.o sgp4ext.o astroliblite.o
+	g++ checkPeriod.o sgp4unit.o sgp4io.o sgp4ext.o astroliblite.o -o checkPeriod
+checkPeriod.o : checkPeriod.c sgp4ext.h sgp4io.h sgp4unit.h satpos.h
+	g++ -c checkPeriod.c
+sgp4unit.o : sgp4unit.cpp sgp4unit.h
+	g++ -c sgp4unit.cpp
+sgp4ext.o : sgp4ext.cpp sgp4ext.h
+	g++ -c sgp4ext.cpp
+sgp4io.o : sgp4io.cpp sgp4io.h
+	g++ -c sgp4io.cpp
+astroliblite.o : /Users/ddeboer/Documents/Code/Lib/astroliblite.c /Users/ddeboer/Documents/Code/Lib/astroliblite.h
+	g++ -c /Users/ddeboer/Documents/Code/Lib/astroliblite.c
+clean:
+	rm -f checkPeriod.o sgp4.o sgp4unit.o sgp4io.o sgp4ext.o astroliblite.o
