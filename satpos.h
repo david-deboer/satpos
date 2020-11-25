@@ -42,7 +42,7 @@ struct observer {
 
 enum {NOPRINT, YESPRINT, PRINTLABEL};
 
-#include "/Users/ddeboer/Documents/Code/Lib/astroliblite.h"
+#include "astroliblite.h"
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>

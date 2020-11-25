@@ -8,7 +8,7 @@ sgp4ext.o : sgp4ext.cpp sgp4ext.h
 	g++ -c sgp4ext.cpp
 sgp4io.o : sgp4io.cpp sgp4io.h
 	g++ -c sgp4io.cpp
-astroliblite.o : /Users/ddeboer/Documents/Code/Lib/astroliblite.c /Users/ddeboer/Documents/Code/Lib/astroliblite.h
-	g++ -c /Users/ddeboer/Documents/Code/Lib/astroliblite.c
+astroliblite.o : astroliblite.cpp astroliblite.h
+	g++ -c astroliblite.cpp
 clean:
 	rm -f satpos.o sgp4.o sgp4unit.o sgp4io.o sgp4ext.o astroliblite.o
