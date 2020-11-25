@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 	typeinput = 'e';
 	typerun = 'c';  // use 'c' (see testcpp.cpp) to just read in tle's.  start/stop gets set below (so overwrites the 'c' settings in sgp4io)
 	
-	whichcon = 72;
+	whichcon = 84;
 	if (whichcon == 721) whichconst = wgs72old;
 	if (whichcon == 72) whichconst = wgs72;
 	if (whichcon == 84) whichconst = wgs84;
@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
 	fprintf(fp,"%lf %lf\n",obs.lng,obs.lat);
 	fprintf(fp,"=%lf %lf\n",now.lng, now.lat);
 	fclose(fp);
-	system("python pltSat.py");
+	//system("python pltSat.py");
 	
 	return 1;
 }
@@ -695,13 +695,14 @@ int otherTerms(struct observer obs, double jd, double *ro, struct observer *subs
 	pos.Latitude = obs.lat;
 	pos.Altitude = obs.alt;
 	
-	subazel(subsat->lng,subsat->lat,Az,El,&range,rsat,&pos);
+	/* Commenting out 11/25/20 to get working...
+    subazel(subsat->lng,subsat->lat,Az,El,&range,rsat,&pos);
 	subsat->range = range;
 	Eq2Hor(*Az,*El,&HA,Dec,obs.lat);
 	*RA = 15.0*lst - HA;
 	while (*RA < 0.0)
 		*RA+=360.0;
-	
+	*/
 	return 1;
 }
 

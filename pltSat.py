@@ -5,7 +5,7 @@ import numpy as np
 cursublng = 1000.0
 cursublat = 1000.0
 try:
-    fp = open('info.out','r')
+    fp = open('info.out', 'r')
     line = fp.readline()
     data = line.split('|')
     obsName = data[0]
@@ -15,11 +15,11 @@ try:
     obsLng = float(data[0])
     obsLat = float(data[1])
     line = fp.readline()
-    if line[0]=='=':
-        data=line.strip('=').split()
+    if line[0] == '=':
+        data = line.strip('=').split()
         cursublng = float(data[0])
         cursublat = float(data[1])
-        print 'Current:', cursublng,cursublat
+        print('Current:', cursublng, cursublat)
 except IOError:
     obsName = 'obs'
     scName = 'sc'
@@ -28,7 +28,7 @@ except IOError:
 
 predix = True
 try:
-    fp = open('predix.out','r')
+    fp = open('predix.out', 'r')
     x = []
     y1 = []
     y2 = []
@@ -39,14 +39,14 @@ try:
         y2.append(float(data[3]))
     fp.close()
 except IOError:
-    print 'predix.out not found'
+    print('predix.out not found')
     predix = False
 
 subsat = True
 slong = []
 slat = []
 try:
-    fp = open('subsat.out','r')
+    fp = open('subsat.out', 'r')
     slong = []
     slat = []
     for line in fp:
@@ -55,45 +55,45 @@ try:
         slat.append(float(data[1]))
     fp.close()
 except IOError:
-    print 'subsat.out not found'
+    print('subsat.out not found')
     subsat = False
 
 if predix:
     plt.figure(1)
     plt.subplot(121)
-    plt.plot(x,y1,'r.',label='Az')
-    plt.plot(x,y2,'b.',label='El')
+    plt.plot(x, y1, 'r.', label='Az')
+    plt.plot(x, y2, 'b.', label='El')
     plt.xlabel('Time [days]')
     plt.ylabel('Degrees')
     plt.legend()
-    plt.title('obs: %s, sc: %s' % (obsName,scName))
+    plt.title('obs: %s, sc: %s' % (obsName, scName))
     plt.subplot(122)
-    plt.plot(y1,y2,'.')
+    plt.plot(y1, y2, '.')
     plt.xlabel('Az [deg]')
     plt.ylabel('El [deg]')
 
 if subsat:
-    ### Get observatory data
-    useObs= ['SC','HN','NL','FD','LA','PT','KP','OV','BR','MK','UCB']
-    obsfp = open('obs.dat','r')
+    # ## Get observatory data
+    useObs = ['SC', 'HN', 'NL', 'FD', 'LA', 'PT', 'KP', 'OV', 'BR', 'MK', 'UCB']
+    obsfp = open('obs.dat', 'r')
     obsLats = []
     obsLongs = []
     obsCodes = []
     for line in obsfp:
-        if line[0]=='#' or line[0]=='!':
+        if line[0] == '#' or line[0] == '!':
             continue
         data = line.split()
         if data[0] in useObs:
-            #print 'Using '+data[1]
+            # print('Using '+data[1])
             obsCodes.append(data[0])
             tmp = data[2].split(':')
             obsLats.append(float(tmp[0]) + float(tmp[1])/60.0 + float(tmp[2])/3600.0)
             tmp = data[3].split(':')
             obsLongs.append(float(tmp[0]) + float(tmp[1])/60.0 + float(tmp[2])/3600.0)
     obsfp.close()
-    ### Draw map
+    # ## Draw map
     plt.figure(2)
-    #m = Basemap(width=17000000,height=12000000,projection='lcc',
+    # m = Basemap(width=17000000,height=12000000,projection='lcc',
       #      resolution='c',lat_1=15.,lat_2=55,lat_0=50,lon_0=-100.)
     m = Basemap(lon_0=cursublng)
     m.drawmapboundary(fill_color='aqua')
@@ -114,7 +114,7 @@ if subsat:
     plt.title(scName)
     if cursublng != 1000.0 and cursublat != 1000.0:
         xpt,ypt = m(cursublng,cursublat)
-        print 'Plotting current'
+        print('Plotting current')
         m.plot(xpt,ypt,'ro')
 
     ffp = open('footprint.out','r')
@@ -129,6 +129,5 @@ if subsat:
     ffp.close()
     xpt,ypt = m(lngf,latf)
     m.plot(xpt,ypt,'k-')
-        
-    plt.show()
 
+    plt.show()
