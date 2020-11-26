@@ -38,7 +38,7 @@ for i in range(len(satlist)):
             sats_by_file[fname].append(satdes)
             break
 
-with open('tle/complete_set.tle', 'w') as fp:
+with open('tle/completeset.tle', 'w') as fp:
     for this_sat in satellites.keys():
         print(satellites[this_sat]['line0'], file=fp)
         print(satellites[this_sat]['line1'], file=fp)
@@ -46,4 +46,4 @@ with open('tle/complete_set.tle', 'w') as fp:
 
 with open('check_all.sh', 'w') as fp:
     for i in range(len(satellites.keys())):
-        print("./satpos {} tle/complete_set.tle".format(i+1), file=fp)
+        print("./satpos tle/completeset.tle {}".format(i+1), file=fp)

@@ -14,7 +14,7 @@
 #undef VERBOSE
 int main(int argc, char *argv[])
 {
-	int argSC=0, argTLE=0, useSC, i, j, k, n, valid;
+	int argSC=0, argTLE=0, i, j, k, n, valid;
 	long mcnt, nup;
 	int transit, printOutTransit;
     char TLEprefix[25], TLEFile[25], SCName[40], SCSearch[10], line[50];
@@ -60,16 +60,18 @@ int main(int argc, char *argv[])
 	strcpy(monstr[11], "Nov");
 	strcpy(monstr[12], "Dec");
 	
-	printf("%s\n",SGP4Version );
-	if (argc > 1)
+	printf("%s\n", SGP4Version);
+    if (argc > 1)
+    {
+        argTLE = 1;
+        sprintf(TLEFile,"tle/%s.tle", argv[1]);
+        printf("Using %s\n", TLEFile);
+    }
+    if (argc > 2)
 	{
 		argSC = 1;
-		k = atoi(argv[1]);
-	}
-	if (argc > 2)
-	{
-		argTLE = 1;
-		strcpy(TLEFile,argv[2]);
+        sscanf(argv[2], "%d", &k);
+        printf("Using %d\n", k);
 	}
 
 	// Get satellite TLE's
@@ -83,7 +85,7 @@ int main(int argc, char *argv[])
 	}
 	fp=fopen(TLEFile,"r");
 	if (fp==NULL)
-		{
+    {
 		printf("%s not found.\n",TLEFile);
 		exit(1);
 	}
@@ -93,7 +95,6 @@ int main(int argc, char *argv[])
 		printf("\n\nSatellites...\n");
 		while(!feof(fp))
 		{
-			useSC = 0;
 			getline(fp,SCName,29);
 			getline(fp,longstr1,100);
 			n=getline(fp,longstr2,100);
@@ -107,19 +108,21 @@ int main(int argc, char *argv[])
 	}
 	for(i=0;i<k;++i)
 	{
-		getline(fp,SCName,29);
-		getline(fp,longstr1,100);
-		getline(fp,longstr2,100);
+		getline(fp, SCName, 30);
+		getline(fp, longstr1, 110);
+		getline(fp, longstr2, 110);
 	}
 	fclose(fp);
-
+ 
 	for(i=strlen(SCName)-1;isspace(SCName[i]);--i)
 		SCName[i]='\0';
 	printf("\n\n%s\n%s\n%s\n\n",SCName,longstr1,longstr2);
-
+    printf("LINE120");
 	readObserver(&obs);
+    printf("LINE123");
 	jday( obs.tstart.Year,1,0,0,0,0.0, jday1 );
-	jday( obs.tnow.Year,obs.tnow.Month,obs.tnow.Day,obs.tnow.Hour,obs.tnow.Minute,obs.tnow.Second, jnow );
+    printf("LINE125");
+    jday( obs.tnow.Year,obs.tnow.Month,obs.tnow.Day,obs.tnow.Hour,obs.tnow.Minute,obs.tnow.Second,jnow );
 	
 	//opsmode = 'a' best understanding of how afspc code works
 	//opsmode = 'i' improved sgp4 resulting in smoother behavior
@@ -271,7 +274,7 @@ int main(int argc, char *argv[])
 	//printf("\ttransit.out\n");
 	printf("\tsubsat.out\n");
 	printf("\tsatpos.out\n");
-	fclose(fp);
+	//fclose(fp);
 	//fclose(fpFringe);
 	//fclose(fpTransit);
 	fclose(fpSubsat);
@@ -443,7 +446,7 @@ int readObserver(struct observer *obs)
 		addTime(&(obs->tstop),dt);
 	}	
 	obs->tstop.time = obs->tstop.Hour/24.0 + obs->tstop.Minute/24.0/60.0 + obs->tstop.Second/24.0/60.0/60.0;
-	
+
 	// step
 	commentLine = 1;
 	while (commentLine)
@@ -462,8 +465,8 @@ int readObserver(struct observer *obs)
 		if (line[0] != '#')
 			commentLine = 0;
 	}
+    fclose(fp);
 	sscanf(line,"%lf %lf %lf",&(obs->Xlam),&(obs->Ylam),&(obs->Zlam));
-	fclose(fp);
 
 	nconv = obs->timeZone + obs->daylightSavings;
 	printf("Observing from %s\n\tlongitude = %.5f\n\tlatitude = %.5f\n\talt = %.2f m\n\thorizon = %.2f deg\n\n",obs->Name,obs->lng,obs->lat,obs->alt,obs->Horizon);
@@ -472,11 +475,12 @@ int readObserver(struct observer *obs)
 	printf("Stop (UTC@%d):        %02d/%02d/%02d  %02d:%02d:%02d\n",nconv,obs->tstop.Month,obs->tstop.Day,obs->tstop.Year,
 		   obs->tstop.Hour,obs->tstop.Minute,(int)obs->tstop.Second);
 	printf("Step:                 %.3lf [min]\n",obs->tstep);
-	printf("Footprint (UTC@%d):   %02d/%02d/%02d  %02d:%02d:%02d\n",nconv,obs->tnow.Month,obs->tnow.Day,obs->tnow.Year,
-		   obs->tnow.Hour,obs->tnow.Minute,(int)obs->tnow.Second);
-	printf("Baseline distances:   %lf, %lf, %lf [wavelengths]\n\n",obs->Xlam,obs->Ylam,obs->Zlam);
-	fclose(fp);
-
+    printf("LINE478");
+	//printf("Footprint (UTC@%d):   %02d/%02d/%02d  %02d:%02d:%02d\n",nconv,obs->tnow.Month,obs->tnow.Day,obs->tnow.Year,
+	//	   obs->tnow.Hour,obs->tnow.Minute,(int)obs->tnow.Second);
+    printf("LINE481");
+	//printf("Baseline distances:   %lf, %lf, %lf [wavelengths]\n\n",obs->Xlam,obs->Ylam,obs->Zlam);
+    printf("LINE428");
 	return 1;
 }
 
