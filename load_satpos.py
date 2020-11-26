@@ -16,6 +16,7 @@ with open("satpos.out", 'r') as fp:
     for line in fp:
         if 'xx' in line:
             sat.name += (line.strip() + ' ')
+            period = float(sat.name.split('=')[1].split()[0])
             continue
         data = line.split()
         df = [float(data[i]) for i in range(len(sat.satpar))]

@@ -46,4 +46,4 @@ with open('tle/completeset.tle', 'w') as fp:
 
 with open('check_all.sh', 'w') as fp:
     for i in range(len(satellites.keys())):
-        print("./satpos tle/completeset.tle {}".format(i+1), file=fp)
+        print("./satpos completeset {}".format(i+1), file=fp)

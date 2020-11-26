@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 	int transit, printOutTransit;
     char TLEprefix[25], TLEFile[25], SCName[40], SCSearch[10], line[50];
     char outname[70], outsatpos[70];
-	double RA, HA, Dec, Az, El, dEl, dAz, oldel, oldaz, olddel;
+	double RA, HA, Dec, Az, El, dEl, dAz, oldel, oldaz, olddel, period;
 	double DOY, olddoy, jday1, jnow, timeconv[3], lngconv[3];
 	double SCVector[15];
 	double w, cw, cDcH, cDsH, sD;
@@ -64,14 +64,14 @@ int main(int argc, char *argv[])
     if (argc > 1)
     {
         argTLE = 1;
-        sprintf(TLEFile,"tle/%s.tle", argv[1]);
-        printf("Using %s\n", TLEFile);
+        strcpy(TLEprefix, argv[1]);
+        printf("Using %s  ", TLEprefix);
     }
     if (argc > 2)
 	{
 		argSC = 1;
         sscanf(argv[2], "%d", &k);
-        printf("Using %d\n", k);
+        printf(" %d\n", k);
 	}
 
 	// Get satellite TLE's
@@ -81,29 +81,30 @@ int main(int argc, char *argv[])
 		system("ls -1 tle/*.tle");
 		printf("\t--------> TLE Filename (leave off the tle's):  ");
 		scanf("%s",TLEprefix);
-		sprintf(TLEFile,"tle/%s.tle",TLEprefix);
+		
 	}
+    sprintf(TLEFile,"tle/%s.tle",TLEprefix);
 	fp=fopen(TLEFile,"r");
 	if (fp==NULL)
     {
 		printf("%s not found.\n",TLEFile);
 		exit(1);
 	}
-	if (!argSC)
-	{
-		i=0;
-		printf("\n\nSatellites...\n");
-		while(!feof(fp))
-		{
-			getline(fp,SCName,29);
-			getline(fp,longstr1,100);
-			n=getline(fp,longstr2,100);
-			++i;
-			if (n > 10)
-				printf("\t%d %s\n",i,SCName);
-		}
+    if (!argSC)
+    {
+        i=0;
+        printf("\n\nSatellites...\n");
+        while(!feof(fp))
+        {
+            getline(fp,SCName,29);
+            getline(fp,longstr1,100);
+            n=getline(fp,longstr2,100);
+            ++i;
+            if (n > 10)
+                printf("\t%d %s\n",i,SCName);
+        }
 		rewind(fp);
-		printf("Input spacecraft number:  ");
+        printf("Input spacecraft number:  ");
 		scanf("%d",&k);
 	}
 	for(i=0;i<k;++i)
@@ -117,11 +118,8 @@ int main(int argc, char *argv[])
 	for(i=strlen(SCName)-1;isspace(SCName[i]);--i)
 		SCName[i]='\0';
 	printf("\n\n%s\n%s\n%s\n\n",SCName,longstr1,longstr2);
-    printf("LINE120");
 	readObserver(&obs);
-    printf("LINE123");
 	jday( obs.tstart.Year,1,0,0,0,0.0, jday1 );
-    printf("LINE125");
     jday( obs.tnow.Year,obs.tnow.Month,obs.tnow.Day,obs.tnow.Hour,obs.tnow.Minute,obs.tnow.Second,jnow );
 	
 	//opsmode = 'a' best understanding of how afspc code works
@@ -161,7 +159,7 @@ int main(int argc, char *argv[])
 	stopmfe  = (jdstop - satrec.jdsatepoch) * 1440.0;
 	deltamin = obs.tstep;
 	
-	fprintf(outfile, "%ld xx\n", satrec.satnum);
+	fprintf(outfile, "%ld xx", satrec.satnum);
 	// call the propagator to get the initial state vector value
 	sgp4 (whichconst, satrec,  0.0, ro,  vo);
 
@@ -175,6 +173,8 @@ int main(int argc, char *argv[])
 	tsince = (jnow - satrec.jdsatepoch)*1440.0;
 	sgp4 (whichconst, satrec,  tsince, ro,  vo);
 	otherTerms(obs,jnow,ro,&now,&Az,&El,&RA,&Dec);
+    period = 2.0*pi/satrec.no;
+    fprintf(outfile, "  period = %12.9f min\n", period);
     printf("Not doing all otherTerms\n");
 	printf("Current Position:\n\t(x,y,z,r):  %lf, %lf, %lf, %lf\n",ro[0],ro[1],ro[2],now.alt);
 	printf("\t(sub_lng, sub_lat, h, range):  %lf, %lf, %lf %lf\n",now.lng,now.lat,now.h,now.range);
@@ -259,6 +259,7 @@ int main(int argc, char *argv[])
 			}
 			fprintf(outfile, " %16.8f %16.8f %16.8f %16.8f %12.9f %12.9f %12.9f",
 					tsince,ro[0],ro[1],ro[2],vo[0],vo[1],vo[2]);
+            period = 2.0*pi/satrec.no;
 			rv2coe(ro, vo, mu, p, a, ecc, incl, node, argp, nu, m, arglat, truelon, lonper );
 			fprintf(outfile, " %14.6f %8.6f %10.5f %10.5f %10.5f %10.5f %10.5f %5i%3i%3i %2i:%2i:%9.6f\n",
 					a, ecc, incl*rad, node*rad, argp*rad, nu*rad,
@@ -475,12 +476,9 @@ int readObserver(struct observer *obs)
 	printf("Stop (UTC@%d):        %02d/%02d/%02d  %02d:%02d:%02d\n",nconv,obs->tstop.Month,obs->tstop.Day,obs->tstop.Year,
 		   obs->tstop.Hour,obs->tstop.Minute,(int)obs->tstop.Second);
 	printf("Step:                 %.3lf [min]\n",obs->tstep);
-    printf("LINE478");
-	//printf("Footprint (UTC@%d):   %02d/%02d/%02d  %02d:%02d:%02d\n",nconv,obs->tnow.Month,obs->tnow.Day,obs->tnow.Year,
-	//	   obs->tnow.Hour,obs->tnow.Minute,(int)obs->tnow.Second);
-    printf("LINE481");
+	printf("Footprint (UTC@%d):   %02d/%02d/%02d  %02d:%02d:%02d\n",nconv,obs->tnow.Month,obs->tnow.Day,obs->tnow.Year,
+		   obs->tnow.Hour,obs->tnow.Minute,(int)obs->tnow.Second);
 	//printf("Baseline distances:   %lf, %lf, %lf [wavelengths]\n\n",obs->Xlam,obs->Ylam,obs->Zlam);
-    printf("LINE428");
 	return 1;
 }
 
