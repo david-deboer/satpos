@@ -342,7 +342,7 @@ int readObserver(struct observer *obs)
 		exit(1);
 	}
 	
-	// current Year Month Day hour min second (UTC)
+	// Year Month Day hour min second (UTC)
 	commentLine = 1;
 	while (commentLine)
 	{
@@ -365,7 +365,7 @@ int readObserver(struct observer *obs)
 		obs->tnow.Hour = tm_now->tm_hour;
 		obs->tnow.Day = tm_now->tm_mday;
 		obs->tnow.Month = tm_now->tm_mon+1;
-		obs->tnow.Year = tm_now->tm_year+1900;
+		obs->tnow.Year = tm_now->tm_year;
 	}
 	obs->tnow.time = obs->tnow.Hour/24.0 + obs->tnow.Minute/24.0/60.0 + obs->tnow.Second/24.0/60.0/60.0;
 
