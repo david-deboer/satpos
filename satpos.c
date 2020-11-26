@@ -17,7 +17,8 @@ int main(int argc, char *argv[])
 	int argSC=0, argTLE=0, useSC, i, j, k, n, valid;
 	long mcnt, nup;
 	int transit, printOutTransit;
-	char TLEFile[25], SCName[40], SCSearch[10], line[50];
+    char TLEprefix[25], TLEFile[25], SCName[40], SCSearch[10], line[50];
+    char outname[70], outsatpos[70];
 	double RA, HA, Dec, Az, El, dEl, dAz, oldel, oldaz, olddel;
 	double DOY, olddoy, jday1, jnow, timeconv[3], lngconv[3];
 	double SCVector[15];
@@ -77,8 +78,8 @@ int main(int argc, char *argv[])
 		printf("------TLE files------\n");
 		system("ls -1 tle/*.tle");
 		printf("\t--------> TLE Filename (leave off the tle's):  ");
-		scanf("%s",line);
-		sprintf(TLEFile,"tle/%s.tle",line);
+		scanf("%s",TLEprefix);
+		sprintf(TLEFile,"tle/%s.tle",TLEprefix);
 	}
 	fp=fopen(TLEFile,"r");
 	if (fp==NULL)
@@ -137,11 +138,13 @@ int main(int argc, char *argv[])
 	getgravconst( whichconst, tumin, mu, radiusearthkm, xke, j2, j3, j4, j3oj2 );
 	
 	// ---------------- setup files for operation ------------------
-	outfile = fopen("satpos.out", "w");
+    sprintf(outname, "sp%s_%d.out", TLEprefix, k);
+    outfile = fopen(outname, "w");
 	fpSubsat = fopen("subsat.out","w");
-	fp   = fopen("predix.out","w");
-	fpFringe = fopen("proFringe.out","w");
-	fpTransit = fopen("transit.out","w");
+	//fp   = fopen("predix.out","w");
+	//fpFringe = fopen("proFringe.out","w");
+	//fpTransit = fopen("transit.out","w");
+    fprintf(outfile, "%d %s xx ", k, SCName);
 
 	// convert the char string to sgp4 elements
 	// includes initialization of sgp4
@@ -169,6 +172,7 @@ int main(int argc, char *argv[])
 	tsince = (jnow - satrec.jdsatepoch)*1440.0;
 	sgp4 (whichconst, satrec,  tsince, ro,  vo);
 	otherTerms(obs,jnow,ro,&now,&Az,&El,&RA,&Dec);
+    printf("Not doing all otherTerms\n");
 	printf("Current Position:\n\t(x,y,z,r):  %lf, %lf, %lf, %lf\n",ro[0],ro[1],ro[2],now.alt);
 	printf("\t(sub_lng, sub_lat, h, range):  %lf, %lf, %lf %lf\n",now.lng,now.lat,now.h,now.range);
 	printf("\t(Az, El, RA, Dec):  %lf, %lf, %lf, %lf\n",Az,El,RA/15.0,Dec);
@@ -222,7 +226,7 @@ int main(int argc, char *argv[])
 				sD   = sin(obs.lat/rad)*sin(El*pi/180.0) + cos(obs.lat/rad)*cos(El*pi/180.0)*cos(Az*pi/180.0);
 				w = obs.Xlam*cDcH - obs.Ylam*cDsH + obs.Zlam*sD;
 				cw = cos(2.0*pi*w);
-				fprintf(fpFringe,"%lf\t%lf\t%lf\t%lf\n",timeconv[0],timeconv[1],w,cw);
+				//fprintf(fpFringe,"%lf\t%lf\t%lf\t%lf\n",timeconv[0],timeconv[1],w,cw);
 				if (mcnt>0L)
 				{
 					dEl = (El-oldel)/(DOY-olddoy)/(60.0*24.0); // Convert to deg/min 
@@ -242,7 +246,7 @@ int main(int argc, char *argv[])
 						}
 						printf("%20s transiting at %8.4lf  %7.4lf   %6.2lf     %5.2lf      %7.1lf     %.2lf          %.2lf\n",SCName,timeconv[0],timeconv[1],Az,El,subsat.range,dAz,dEl);
 					}
-					fprintf(fpTransit,"%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\n",timeconv[0],timeconv[1],Az,El,subsat.range,dAz,dEl);
+					/*fprintf(fpTransit,"%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\n",timeconv[0],timeconv[1],Az,El,subsat.range,dAz,dEl);*/
 				}
 				++nup;
 				oldaz = Az;
@@ -262,14 +266,14 @@ int main(int argc, char *argv[])
 
 	printf("\n%s is up %g%% (%ld/%ld)\n",SCName, 100.0*( (double)nup )/( (double) mcnt ), nup, mcnt );
 	printf("\nOutput to:\n");
-	printf("\tpredix.out\n");
-	printf("\tproFringe.out\n");
-	printf("\ttransit.out\n");
+	//printf("\tpredix.out\n");
+	//printf("\tproFringe.out\n");
+	//printf("\ttransit.out\n");
 	printf("\tsubsat.out\n");
 	printf("\tsatpos.out\n");
 	fclose(fp);
-	fclose(fpFringe);
-	fclose(fpTransit);
+	//fclose(fpFringe);
+	//fclose(fpTransit);
 	fclose(fpSubsat);
 	fclose(outfile);
 	printf("\n");
