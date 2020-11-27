@@ -20,11 +20,11 @@ int main(int argc, char *argv[])
     char TLEprefix[25], TLEFile[25], SCName[40], SCSearch[10], line[50];
     char outname[70], outsatpos[70];
 	double RA, HA, Dec, Az, El, dEl, dAz, oldel, oldaz, olddel, period;
-	double DOY, olddoy, jday1, jnow, timeconv[3], lngconv[3];
+	double DOY, olddoy, jday1, jstart, timeconv[3], lngconv[3];
 	double SCVector[15];
 	double w, cw, cDcH, cDsH, sD;
 	FILE *fp, *fpFringe, *fpTransit, *fpSubsat;
-	struct observer obs, subsat, now;
+	struct observer obs, subsat, start;
 	/////////////////This is cut-and-pasted in from testcpp.cpp///////////////
 	char str[2];
 	double ro[3];
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 	printf("\n\n%s\n%s\n%s\n\n",SCName,longstr1,longstr2);
 	readObserver(&obs);
 	jday( obs.tstart.Year,1,0,0,0,0.0, jday1 );
-    jday( obs.tnow.Year,obs.tnow.Month,obs.tnow.Day,obs.tnow.Hour,obs.tnow.Minute,obs.tnow.Second,jnow );
+    jday( obs.tstart.Year,obs.tstart.Month,obs.tstart.Day,obs.tstart.Hour,obs.tstart.Minute,obs.tstart.Second,jstart );
 	
 	//opsmode = 'a' best understanding of how afspc code works
 	//opsmode = 'i' improved sgp4 resulting in smoother behavior
@@ -169,15 +169,15 @@ int main(int argc, char *argv[])
 	printf("ScenarioEpoch:  %3i %3s%5i%3i:%2i:%12.9f \n",day,monstr[mon],year,hr,min,sec );
 	printf("CoordinateSystem:  TEME-to-PEF\n\n");
 	
-	// First do it for 'now'
-	tsince = (jnow - satrec.jdsatepoch)*1440.0;
+	// First do it for 'start'
+	tsince = (jstart - satrec.jdsatepoch)*1440.0;
 	sgp4 (whichconst, satrec,  tsince, ro,  vo);
-	otherTerms(obs,jnow,ro,&now,&Az,&El,&RA,&Dec);
+	otherTerms(obs,jstart,ro,&start,&Az,&El,&RA,&Dec);
     period = 2.0*pi/satrec.no;
     fprintf(outfile, "  period = %12.9f min\n", period);
     printf("Not doing all otherTerms\n");
-	printf("Current Position:\n\t(x,y,z,r):  %lf, %lf, %lf, %lf\n",ro[0],ro[1],ro[2],now.alt);
-	printf("\t(sub_lng, sub_lat, h, range):  %lf, %lf, %lf %lf\n",now.lng,now.lat,now.h,now.range);
+	printf("Starting Position:\n\t(x,y,z,r):  %lf, %lf, %lf, %lf\n",ro[0],ro[1],ro[2],start.alt);
+	printf("\t(sub_lng, sub_lat, h, range):  %lf, %lf, %lf %lf\n",start.lng,start.lat,start.h,start.range);
 	printf("\t(Az, El, RA, Dec):  %lf, %lf, %lf, %lf\n",Az,El,RA/15.0,Dec);
 	
 	// initialize variables
@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
 			}
 			lngconv[0] = lngconv[1];
 			fprintf(fpSubsat,"%lf\t%lf\n",lngconv[1],subsat.lat);
-			if (El > obs.Horizon)
+			/*if (El > obs.Horizon)
 			{
 				timeconv[0] = DOY + (obs.timeZone + obs.daylightSavings)/24.0;
 				timeconv[1] = hr + min/60.0 + sec/3600.0 + (obs.timeZone + obs.daylightSavings);
@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
 				sD   = sin(obs.lat/rad)*sin(El*pi/180.0) + cos(obs.lat/rad)*cos(El*pi/180.0)*cos(Az*pi/180.0);
 				w = obs.Xlam*cDcH - obs.Ylam*cDsH + obs.Zlam*sD;
 				cw = cos(2.0*pi*w);
-				//fprintf(fpFringe,"%lf\t%lf\t%lf\t%lf\n",timeconv[0],timeconv[1],w,cw);
+				fprintf(fpFringe,"%lf\t%lf\t%lf\t%lf\n",timeconv[0],timeconv[1],w,cw);
 				if (mcnt>0L)
 				{
 					dEl = (El-oldel)/(DOY-olddoy)/(60.0*24.0); // Convert to deg/min 
@@ -249,14 +249,14 @@ int main(int argc, char *argv[])
 						}
 						printf("%20s transiting at %8.4lf  %7.4lf   %6.2lf     %5.2lf      %7.1lf     %.2lf          %.2lf\n",SCName,timeconv[0],timeconv[1],Az,El,subsat.range,dAz,dEl);
 					}
-					/*fprintf(fpTransit,"%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\n",timeconv[0],timeconv[1],Az,El,subsat.range,dAz,dEl);*/
+					fprintf(fpTransit,"%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\n",timeconv[0],timeconv[1],Az,El,subsat.range,dAz,dEl);
 				}
 				++nup;
 				oldaz = Az;
 				oldel = El;
 				olddel = dEl;
 				olddoy = DOY;
-			}
+			}*/
 			fprintf(outfile, " %16.8f %16.8f %16.8f %16.8f %12.9f %12.9f %12.9f",
 					tsince,ro[0],ro[1],ro[2],vo[0],vo[1],vo[2]);
             period = 2.0*pi/satrec.no;
@@ -281,11 +281,11 @@ int main(int argc, char *argv[])
 	fclose(fpSubsat);
 	fclose(outfile);
 	printf("\n");
-	writeFootprint(now.lng,now.lat,now.alt);
+	writeFootprint(start.lng,start.lat,start.alt);
 	fp = fopen("info.out","w");
 	fprintf(fp,"%s | %s\n",obs.Name,SCName);
 	fprintf(fp,"%lf %lf\n",obs.lng,obs.lat);
-	fprintf(fp,"=%lf %lf\n",now.lng, now.lat);
+	fprintf(fp,"=%lf %lf\n",start.lng, start.lat);
 	fclose(fp);
 	//system("python pltSat.py");
 	
@@ -341,33 +341,6 @@ int readObserver(struct observer *obs)
 		printf("Location not set\n.");
 		exit(1);
 	}
-	
-	// Year Month Day hour min second (UTC)
-	commentLine = 1;
-	while (commentLine)
-	{
-		getline(fp,line,299);
-		if (line[0] != '#')
-			commentLine = 0;
-	}
-	nconv = sscanf(line,"%d %d %d %d %d %lf",&(obs->tnow.Year),&(obs->tnow.Month),&(obs->tnow.Day),&(obs->tnow.Hour),&(obs->tnow.Minute),&(obs->tnow.Second));
-	if (nconv==6)
-	{
-		resetTime(&dt);
-		dt.Hour = -1*(obs->timeZone + obs->daylightSavings);
-		addTime(&(obs->tnow),dt);  /// Convert to UTC
-	}
-	else 
-	{
-		obs->timeZone = timeZone;
-		obs->tnow.Second = (float) tm_now->tm_sec;
-		obs->tnow.Minute = tm_now->tm_min;
-		obs->tnow.Hour = tm_now->tm_hour;
-		obs->tnow.Day = tm_now->tm_mday;
-		obs->tnow.Month = tm_now->tm_mon+1;
-		obs->tnow.Year = tm_now->tm_year;
-	}
-	obs->tnow.time = obs->tnow.Hour/24.0 + obs->tnow.Minute/24.0/60.0 + obs->tnow.Second/24.0/60.0/60.0;
 
 	// start Year Month Day hour min second
 	commentLine = 1;
@@ -387,16 +360,16 @@ int readObserver(struct observer *obs)
 	else if (nconv==4)
 	{
 		resetTime(&dt);
-		dt.Day = -1*obs->tstart.Year;       // the correct position in sscanf above
-		dt.Hour = -1*obs->tstart.Month;     //   "
-		dt.Minute = -1*obs->tstart.Day;     //   "
-		dt.Second = -1*obs->tstart.Hour;    //   "
-		obs->tstart.Second = obs->tnow.Second;
-		obs->tstart.Minute = obs->tnow.Minute;
-		obs->tstart.Hour = obs->tnow.Hour;
-		obs->tstart.Day = obs->tnow.Day;
-		obs->tstart.Month = obs->tnow.Month;
-		obs->tstart.Year = obs->tnow.Year;
+		dt.Day = obs->tstart.Year;       // the correct position in sscanf above
+		dt.Hour = obs->tstart.Month;     //   "
+		dt.Minute = obs->tstart.Day;     //   "
+		dt.Second = obs->tstart.Hour;    //   "
+		obs->tstart.Second = tm_now->tm_sec;
+		obs->tstart.Minute = tm_now->tm_min;
+		obs->tstart.Hour = tm_now->tm_hour;
+		obs->tstart.Day = tm_now->tm_mday;
+		obs->tstart.Month = tm_now->tm_mon+1;
+		obs->tstart.Year = tm_now->tm_year+1900;
 		addTime(&(obs->tstart),dt);
 	}
 	else 
@@ -421,31 +394,26 @@ int readObserver(struct observer *obs)
 		dt.Hour = -1*(obs->timeZone + obs->daylightSavings);
 		addTime(&(obs->tstop),dt);  /// Convert to UTC
 	}
-	else
+	else if (nconv==4)
 	{
-		if (nconv==4)  // otherwise use the same one as above
-		{
-			resetTime(&dt);
-			dt.Day = obs->tstop.Year;
-			dt.Hour = obs->tstop.Month;
-			dt.Minute = obs->tstop.Day;
-			dt.Second = obs->tstop.Hour;
-		}
-		else 
-		{
-			dt.Day*=-1;
-			dt.Hour*=-1;
-			dt.Minute*=-1;
-			dt.Second*=-1.0;
-		}
-		obs->tstop.Second = obs->tnow.Second;
-		obs->tstop.Minute = obs->tnow.Minute;
-		obs->tstop.Hour = obs->tnow.Hour;
-		obs->tstop.Day = obs->tnow.Day;
-		obs->tstop.Month = obs->tnow.Month;
-		obs->tstop.Year = obs->tnow.Year;
-		addTime(&(obs->tstop),dt);
-	}	
+        resetTime(&dt);
+        dt.Day = obs->tstop.Year;       // the correct position in sscanf above
+        dt.Hour = obs->tstop.Month;     //   "
+        dt.Minute = obs->tstop.Day;     //   "
+        dt.Second = obs->tstop.Hour;    //   "
+        obs->tstop.Second = obs->tstart.Second;
+        obs->tstop.Minute = obs->tstart.Minute;
+        obs->tstop.Hour = obs->tstart.Hour;
+        obs->tstop.Day = obs->tstart.Day;
+        obs->tstop.Month = obs->tstart.Month;
+        obs->tstop.Year = obs->tstart.Year;
+        addTime(&(obs->tstop),dt);
+	}
+    else
+    {
+        printf("Incorrect time start - need either (all int):\n\tabsolute(year month day hour minute second) or delta(day hour minute second)\n");
+        exit(1);
+    }
 	obs->tstop.time = obs->tstop.Hour/24.0 + obs->tstop.Minute/24.0/60.0 + obs->tstop.Second/24.0/60.0/60.0;
 
 	// step
@@ -476,8 +444,6 @@ int readObserver(struct observer *obs)
 	printf("Stop (UTC@%d):        %02d/%02d/%02d  %02d:%02d:%02d\n",nconv,obs->tstop.Month,obs->tstop.Day,obs->tstop.Year,
 		   obs->tstop.Hour,obs->tstop.Minute,(int)obs->tstop.Second);
 	printf("Step:                 %.3lf [min]\n",obs->tstep);
-	printf("Footprint (UTC@%d):   %02d/%02d/%02d  %02d:%02d:%02d\n",nconv,obs->tnow.Month,obs->tnow.Day,obs->tnow.Year,
-		   obs->tnow.Hour,obs->tnow.Minute,(int)obs->tnow.Second);
 	//printf("Baseline distances:   %lf, %lf, %lf [wavelengths]\n\n",obs->Xlam,obs->Ylam,obs->Zlam);
 	return 1;
 }

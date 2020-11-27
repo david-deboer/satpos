@@ -34,7 +34,8 @@ class Track:
         self.loc = EarthLocation(lat=lat*u.deg, lon=lon*u.deg, height=alt*u.m)
 
     def separation_angle(self):
-        robs = np.sqrt(self.loc.x**2 + self.loc.y**2 + self.loc.z**2)
+        robs = np.sqrt(self.loc.x.value**2 + self.loc.y.value**2 + self.loc.z.value**2)
         rxyz = np.sqrt(self.x**2 + self.y**2 + self.z**2)
-        cosxyz = self.loc.x * self.x + self.loc.y * self.y + self.loc.z * self.z
+        cosxyz = self.loc.x.value * self.x + self.loc.y.value * self.y + self.loc.z.value * self.z
         self.ang = np.rad2deg(np.arccos(cosxyz / (robs * rxyz)))
+        self.viewable = len(np.where(self.ang < 90.0)) > 0
