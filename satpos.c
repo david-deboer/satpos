@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     char TLEprefix[25], TLEFile[25], SCName[40], SCSearch[10], line[50];
     char outname[70], outsatpos[70];
 	double RA, HA, Dec, Az, El, dEl, dAz, oldel, oldaz, olddel, period;
-	double DOY, olddoy, jday1, jstart, timeconv[3], lngconv[3];
+	double DOY, olddoy, jdday1, timeconv[3], lngconv[3];
 	double SCVector[15];
 	double w, cw, cDcH, cDsH, sD;
 	FILE *fp, *fpFringe, *fpTransit, *fpSubsat;
@@ -117,10 +117,9 @@ int main(int argc, char *argv[])
  
 	for(i=strlen(SCName)-1;isspace(SCName[i]);--i)
 		SCName[i]='\0';
-	printf("\n\n%s\n%s\n%s\n\n",SCName,longstr1,longstr2);
+	//printf("\n\n%s\n%s\n%s\n\n",SCName,longstr1,longstr2);
+    printf("\n%s\n",SCName);
 	readObserver(&obs);
-	jday( obs.tstart.Year,1,0,0,0,0.0, jday1 );
-    jday( obs.tstart.Year,obs.tstart.Month,obs.tstart.Day,obs.tstart.Hour,obs.tstart.Minute,obs.tstart.Second,jstart );
 	
 	//opsmode = 'a' best understanding of how afspc code works
 	//opsmode = 'i' improved sgp4 resulting in smoother behavior
@@ -139,7 +138,7 @@ int main(int argc, char *argv[])
 	getgravconst( whichconst, tumin, mu, radiusearthkm, xke, j2, j3, j4, j3oj2 );
 	
 	// ---------------- setup files for operation ------------------
-    sprintf(outname, "sp%s_%d.out", TLEprefix, k);
+    sprintf(outname, "sp%s%04d.out", TLEprefix, k);
     outfile = fopen(outname, "w");
 	fpSubsat = fopen("subsat.out","w");
 	//fp   = fopen("predix.out","w");
@@ -153,8 +152,9 @@ int main(int argc, char *argv[])
 			   startmfe, stopmfe, deltamin, satrec );
 
 	// This is pulled out of sgp4io.cpp to change the start/stop times
-	jday( obs.tstart.Year,obs.tstart.Month,obs.tstart.Day,obs.tstart.Hour,obs.tstart.Minute,obs.tstart.Second, jdstart );
-	jday( obs.tstart.Year,obs.tstop.Month,obs.tstop.Day,obs.tstop.Hour,obs.tstop.Minute,obs.tstop.Second, jdstop );
+    jday( obs.tstart.Year,1,0,0,0,0.0, jdday1 );
+    jday( obs.tstart.Year,obs.tstart.Month,obs.tstart.Day,obs.tstart.Hour,obs.tstart.Minute,obs.tstart.Second,jdstart );
+    jday( obs.tstop.Year,obs.tstop.Month,obs.tstop.Day,obs.tstop.Hour,obs.tstop.Minute,obs.tstop.Second, jdstop );
 	startmfe = (jdstart - satrec.jdsatepoch) * 1440.0;
 	stopmfe  = (jdstop - satrec.jdsatepoch) * 1440.0;
 	deltamin = obs.tstep;
@@ -164,21 +164,21 @@ int main(int argc, char *argv[])
 	sgp4 (whichconst, satrec,  0.0, ro,  vo);
 
 	jd = satrec.jdsatepoch;
-	invjday( jd, year,mon,day,hr,min, sec );
+	invjday( jd, year,mon,day,hr,min,sec );
 	printf("stk.v.4.3 \n"); // must use 4.3...
 	printf("ScenarioEpoch:  %3i %3s%5i%3i:%2i:%12.9f \n",day,monstr[mon],year,hr,min,sec );
 	printf("CoordinateSystem:  TEME-to-PEF\n\n");
 	
 	// First do it for 'start'
-	tsince = (jstart - satrec.jdsatepoch)*1440.0;
+	tsince = (jdstart - satrec.jdsatepoch)*1440.0;
 	sgp4 (whichconst, satrec,  tsince, ro,  vo);
-	otherTerms(obs,jstart,ro,&start,&Az,&El,&RA,&Dec);
+	otherTerms(obs,jdstart,ro,&start,&Az,&El,&RA,&Dec);
     period = 2.0*pi/satrec.no;
     fprintf(outfile, "  period = %12.9f min\n", period);
-    printf("Not doing all otherTerms\n");
+    printf("Not doing all otherTerms and other stuff... (11/26/2020)\n");
 	printf("Starting Position:\n\t(x,y,z,r):  %lf, %lf, %lf, %lf\n",ro[0],ro[1],ro[2],start.alt);
 	printf("\t(sub_lng, sub_lat, h, range):  %lf, %lf, %lf %lf\n",start.lng,start.lat,start.h,start.range);
-	printf("\t(Az, El, RA, Dec):  %lf, %lf, %lf, %lf\n",Az,El,RA/15.0,Dec);
+	//printf("\t(Az, El, RA, Dec):  %lf, %lf, %lf, %lf\n",Az,El,RA/15.0,Dec);
 	
 	// initialize variables
 	nup = 0;
@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
 		{
 			jd = satrec.jdsatepoch + tsince/1440.0;
 			invjday( jd, year,mon,day,hr,min, sec );
-			DOY = jd - jday1;
+			DOY = jd - jdday1;
 			otherTerms(obs,jd,ro,&subsat,&Az,&El,&RA,&Dec);
 			lngconv[1] = subsat.lng;
 			if (lngconv[0]!=999.9 && fabs(lngconv[1]-lngconv[0])>350.0) 
@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
 		} // if satrec.error == 0
 	}
 
-	printf("\n%s is up %g%% (%ld/%ld)\n",SCName, 100.0*( (double)nup )/( (double) mcnt ), nup, mcnt );
+	//printf("\n%s is up %g%% (%ld/%ld)\n",SCName, 100.0*( (double)nup )/( (double) mcnt ), nup, mcnt );
 	printf("\nOutput to:\n");
 	//printf("\tpredix.out\n");
 	//printf("\tproFringe.out\n");
@@ -282,11 +282,11 @@ int main(int argc, char *argv[])
 	fclose(outfile);
 	printf("\n");
 	writeFootprint(start.lng,start.lat,start.alt);
-	fp = fopen("info.out","w");
+	/*fp = fopen("info.out","w");
 	fprintf(fp,"%s | %s\n",obs.Name,SCName);
 	fprintf(fp,"%lf %lf\n",obs.lng,obs.lat);
 	fprintf(fp,"=%lf %lf\n",start.lng, start.lat);
-	fclose(fp);
+	fclose(fp);*/
 	//system("python pltSat.py");
 	
 	return 1;
@@ -308,16 +308,16 @@ int readObserver(struct observer *obs)
 	//printf("%s",local_s);
 	tm_now = localtime(&time_now);
 	timeZone = tm_now->tm_hour;
-	printf("System:\n");
-	printf("\tLocal:  %02d:%02d:%02d   %02d/%02d/%d\n",tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec, tm_now->tm_mon+1, tm_now->tm_mday, tm_now->tm_year+1900);
+	//printf("System:\n");
+	//printf("\tLocal:  %02d:%02d:%02d   %02d/%02d/%d\n",tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec, tm_now->tm_mon+1, tm_now->tm_mday, tm_now->tm_year+1900);
 	tm_now = gmtime(&time_now);
 	timeZone-= tm_now->tm_hour;
 	if (timeZone > 12)
 		timeZone = timeZone - 24;
 	else if (timeZone < -12)
 		timeZone = timeZone + 24;
-	printf("\tUTC:    %02d:%02d:%02d   %02d/%02d/%d\n",tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec, tm_now->tm_mon+1, tm_now->tm_mday, tm_now->tm_year+1900);
-	printf("\tTimeZone:  %d\n",timeZone);
+	//printf("\tUTC:    %02d:%02d:%02d   %02d/%02d/%d\n",tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec, tm_now->tm_mon+1, tm_now->tm_mday, tm_now->tm_year+1900);
+	//printf("\tTimeZone:  %d\n",timeZone);
 	
 	///////////  Read input file
 	fp=fopen("satpos.cfg","r");
@@ -438,7 +438,7 @@ int readObserver(struct observer *obs)
 	sscanf(line,"%lf %lf %lf",&(obs->Xlam),&(obs->Ylam),&(obs->Zlam));
 
 	nconv = obs->timeZone + obs->daylightSavings;
-	printf("Observing from %s\n\tlongitude = %.5f\n\tlatitude = %.5f\n\talt = %.2f m\n\thorizon = %.2f deg\n\n",obs->Name,obs->lng,obs->lat,obs->alt,obs->Horizon);
+	//printf("Observing from %s\n\tlongitude = %.5f\n\tlatitude = %.5f\n\talt = %.2f m\n\thorizon = %.2f deg\n\n",obs->Name,obs->lng,obs->lat,obs->alt,obs->Horizon);
 	printf("Start (UTC@%d):       %02d/%02d/%02d  %02d:%02d:%02d\n",nconv,obs->tstart.Month,obs->tstart.Day,obs->tstart.Year,
 		   obs->tstart.Hour,obs->tstart.Minute,(int)obs->tstart.Second);
 	printf("Stop (UTC@%d):        %02d/%02d/%02d  %02d:%02d:%02d\n",nconv,obs->tstop.Month,obs->tstop.Day,obs->tstop.Year,
@@ -688,7 +688,6 @@ int writeFootprint(double lngs, double lats, double rsat)
 	lats *= PI/180.0;
 	cg = 6378.0/rsat;
 	g = acos(cg);
-	printf("central angle = %lf\n",g*180.0/PI);
 	for (latf=lats-g+1.0E-6; latf<lats+g; latf+=0.01)
 	{
 		cll = cg/cos(latf)/cos(lats) - tan(latf)*tan(lats);
