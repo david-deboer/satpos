@@ -7,15 +7,15 @@ from setuptools import setup
 import glob
 
 setup_args = {
-    'name': "utility_packages",
-    'description': "miscellaneous utility methods/scripts/etc",
+    'name': "satpos - Satellite locating",
+    'description': "tracking/locating satellites",
     'license': "BSD",
     'author': "David DeBoer",
-    'author_email': "david.r.deboer@gmail.edu",
+    'author_email': "ddeboer@berkeley.edu",
     'version': '0.1',
     'scripts': glob.glob('scripts/*'),
-    'packages': ['my_utils', 'my_ephem'],
-    'package_data': {"my_utils": ["data/*"]}
+    'packages': ['satpos'],
+    # 'package_data': {"my_utils": ["data/*"]}
 }
 
 if __name__ == '__main__':

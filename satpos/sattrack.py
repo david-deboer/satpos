@@ -95,3 +95,36 @@ class Track:
             pn[int(self.chnum[i])] += self.Rxpwr[i]
             self.wf.append(list(np.log(pn)))
         self.wf = np.array(self.wf)
+
+# int writeFootprint(double lngs, double lats, double rsat)
+# {
+# 	double cg, g, latf, lngf, cll;
+# 	FILE *fp;
+# 	fp = fopen("footprint.out","w");
+#
+# 	lngs *= PI/180.0;
+# 	lats *= PI/180.0;
+# 	cg = 6378.0/rsat;
+# 	g = acos(cg);
+# 	for (latf=lats-g+1.0E-6; latf<lats+g; latf+=0.01)
+# 	{
+# 		cll = cg/cos(latf)/cos(lats) - tan(latf)*tan(lats);
+# 		lngf = lngs - acos(cll);
+# 		//fprintf(fp,"%lf\t%lf\tup\n",lngf*180.0/PI,latf*180.0/PI);
+#         fprintf(fp,"%lf\t%lf\n",lngf*180.0/PI,latf*180.0/PI);
+# 	}
+# 	for (latf=lats+g-1.0E-6; latf>lats-g; latf-=0.01)
+# 	{
+# 		cll = cg/cos(latf)/cos(lats) - tan(latf)*tan(lats);
+# 		lngf = lngs + acos(cll);
+# 		//fprintf(fp,"%lf\t%lf\tdn\n",lngf*180.0/PI,latf*180.0/PI);
+#         fprintf(fp,"%lf\t%lf\n",lngf*180.0/PI,latf*180.0/PI);
+# 	}
+# 	latf=lats-g+1.0E-6;
+# 	cll = cg/cos(latf)/cos(lats) - tan(latf)*tan(lats);
+# 	lngf = lngs - acos(cll);
+# 	//fprintf(fp,"%lf\t%lf\tup\n",lngf*180.0/PI,latf*180.0/PI);
+#     fprintf(fp,"%lf\t%lf\n",lngf*180.0/PI,latf*180.0/PI);
+# 	fclose(fp);
+# 	return 1;
+# }

@@ -19,18 +19,14 @@ int main(int argc, char *argv[])
     char outname[70], outsatpos[70];
     const char * monstr[] = {"NULL", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 	double period, timeconv[3], lngconv[3];
-	double SCVector[15];
-	double w, cw, cDcH, cDsH, sD;
-	FILE *fp, *fpFringe, *fpTransit, *fpSubsat;
+	FILE *fp, *fpSubsat, *outfile;
 	struct observer obs, subsat, start;
-	/////////////////This is cut-and-pasted in from testcpp.cpp///////////////
 	char str[2];
 	double ro[3];
 	double vo[3];
 	char typeinput, typerun, opsmode;
 	gravconsttype  whichconst;
 	int whichcon;
-	FILE *outfile;
 	// ----------------------------  locals  -------------------------------
 	double p, a, ecc, incl, node, argp, nu, m, arglat, truelon, lonper;
 	double sec,  jd, rad, tsince, startmfe, stopmfe, deltamin, jdstart, jdstop;
@@ -124,7 +120,6 @@ int main(int argc, char *argv[])
     sprintf(outname, "sp%s%04d.out", TLEprefix, k);
     outfile = fopen(outname, "w");
 	fpSubsat = fopen("subsat.out","w");
-    fprintf(outfile, "%d %s xx ", k, SCName);
 
 	// convert the char string to sgp4 elements
 	// includes initialization of sgp4
@@ -138,7 +133,6 @@ int main(int argc, char *argv[])
 	stopmfe  = (jdstop - satrec.jdsatepoch) * 1440.0;
 	deltamin = obs.tstep;
 	
-	fprintf(outfile, "%ld xx", satrec.satnum);
 	// call the propagator to get the initial state vector value
 	sgp4 (whichconst, satrec,  0.0, ro,  vo);
 
@@ -153,11 +147,21 @@ int main(int argc, char *argv[])
 	sgp4 (whichconst, satrec,  tsince, ro,  vo);
 	otherTerms(obs,jdstart,ro,&start);
     period = 2.0*pi/satrec.no;
-    fprintf(outfile, "  period = %12.9f min\n", period);
+    
     printf("Period: %.3f [min]\n", period);
 	printf("Starting Position:\n\t(x,y,z,r):  %lf, %lf, %lf, %lf\n",ro[0],ro[1],ro[2],start.alt);
-	printf("\t(sub_lng, sub_lat, h, range):  %lf, %lf, %lf %lf\n",start.lng,start.lat,start.h,start.range);
+	printf("\t(sub_lng, sub_lat, h):  %lf, %lf, %lf\n",start.lng,start.lat,start.h);
 	
+    // Write header
+    fprintf(outfile, "#spacecraft name: %s\n", SCName);
+    fprintf(outfile, "#satnum: %ld", satrec.satnum);
+    fprintf(outfile, "#file and entry number: %s, %d\n", TLEFile, k);
+    fprintf(outfile, "#line1: %s\n", longstr1);
+    fprintf(outfile, "#line2: %s\n", longstr2);
+    fprintf(outfile, "#period = %12.9f min\n", period);
+    fprintf(outfile, "#starting x,y,z,r: %lf, %lf, %lf, %lf\n",ro[0],ro[1],ro[2],start.alt);
+    fprintf(outfile, "#starting lon,lat,h: %lf, %lf, %lf\n",start.lng,start.lat,start.h);
+    
 	// initialize variables
 	tsince = startmfe;
 	// check so the first value isn't written twice
@@ -188,7 +192,6 @@ int main(int argc, char *argv[])
 			fprintf(fpSubsat,"%lf\t%lf\n",lngconv[1],subsat.lat);
 			fprintf(outfile, " %16.8f %16.8f %16.8f %16.8f %12.9f %12.9f %12.9f",
 					tsince,ro[0],ro[1],ro[2],vo[0],vo[1],vo[2]);
-            period = 2.0*pi/satrec.no;
 			rv2coe(ro, vo, mu, p, a, ecc, incl, node, argp, nu, m, arglat, truelon, lonper );
 			fprintf(outfile, " %14.6f %8.6f %10.5f %10.5f %10.5f %10.5f %10.5f %5i%3i%3i %2i:%2i:%9.6f\n",
 					a, ecc, incl*rad, node*rad, argp*rad, nu*rad,
@@ -201,7 +204,7 @@ int main(int argc, char *argv[])
 	printf("\t%s\n\n", outname);
 	fclose(fpSubsat);
 	fclose(outfile);
-	writeFootprint(start.lng,start.lat,start.alt);
+	//writeFootprint(start.lng,start.lat,start.alt);
 	
 	return 1;
 }
@@ -536,7 +539,7 @@ int otherTerms(struct observer obs, double jd, double *ro, struct observer *subs
 {
 	int i,j,k;
 	double gmst, rad, TmpDbl[3], HA,lst;
-	double sslng, sslat, h, range, rsat;
+	double sslng, sslat, h, rsat;
 	double x, y, lmb;
 	
 	rad = 180.0/PI;
