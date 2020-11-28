@@ -5,15 +5,20 @@
 
 from setuptools import setup
 import glob
+import shutil
+from os.path import expanduser
+
+bin_dir = expanduser("~/opt/miniconda3/bin")
+shutil.copy("src/satpos", bin_dir)
 
 setup_args = {
-    'name': "satpos - Satellite locating",
+    'name': "satpos",
     'description': "tracking/locating satellites",
     'license': "BSD",
     'author': "David DeBoer",
     'author_email': "ddeboer@berkeley.edu",
     'version': '0.1',
-    'scripts': glob.glob('scripts/*'),
+    # 'scripts': glob.glob('scripts/*'),
     'packages': ['satpos'],
     # 'package_data': {"my_utils": ["data/*"]}
 }

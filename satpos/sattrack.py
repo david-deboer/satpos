@@ -17,15 +17,13 @@ class Track:
         self.read_file()
 
     def read_file(self):
-        self.header = ''
+        self.headerlines = []
         with open(self.fname, 'r') as fp:
             for line in fp:
-                if 'xx' in line:
-                    self.header += (line.strip() + ' ')
-                    if 'period' in line:
-                        self.period = float(self.header.split('=')[1].split()[0])
+                if line[0] == '#':
+                    self.headerlines.append(line.strip()[1:])
                     continue
-                data = line.split()
+                data = line.strip().split()
                 df = [float(data[i]) for i in range(len(self.satpar))]
                 for i, sp in enumerate(self.satpar):
                     getattr(self, sp).append(df[i])
@@ -34,6 +32,20 @@ class Track:
                 self.since = np.array(self.since) * 60.0  # convert to sec
                 continue
             setattr(self, sp, np.array(getattr(self, sp))*1000.0)  # convert to m
+        self.parse_header()
+
+    def parse_header(self):
+        self.headers = {'scname': Namespace(text='spacecraft name', type=str, nval=0),
+                        'scnum': Namespace(text='satnum', type=int, nval=0),
+                        'period': Namespace(text='period', type=float, nval=0),
+                        'sublon': Namespace(text='starting lon,lat,h', type=float, nval=0),
+                        'sublat': Namespace(text='starting lon.lat,h', type=float, nval=1),
+                        'height': Namespace(text='starting lon,lat,h', type=float, nval=2)}
+        for hdrline in self.headerlines:
+            for hdr, valns in self.headers.items():
+                if valns.text in hdrline:
+                    data = hdrline.split(':')[1].strip().split()
+                    setattr(self, hdr, valns.type(data[valns.nval]))
 
     def calc(self, freq, loc=None):
         if loc is not None:

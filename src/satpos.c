@@ -154,11 +154,11 @@ int main(int argc, char *argv[])
 	
     // Write header
     fprintf(outfile, "#spacecraft name: %s\n", SCName);
-    fprintf(outfile, "#satnum: %ld", satrec.satnum);
-    fprintf(outfile, "#file and entry number: %s, %d\n", TLEFile, k);
+    fprintf(outfile, "#satnum: %ld\n", satrec.satnum);
+    fprintf(outfile, "#file and entry number: %s %d\n", TLEFile, k);
     fprintf(outfile, "#line1: %s\n", longstr1);
     fprintf(outfile, "#line2: %s\n", longstr2);
-    fprintf(outfile, "#period = %12.9f min\n", period);
+    fprintf(outfile, "#period: %12.9f min\n", period);
     fprintf(outfile, "#starting x,y,z,r: %lf, %lf, %lf, %lf\n",ro[0],ro[1],ro[2],start.alt);
     fprintf(outfile, "#starting lon,lat,h: %lf, %lf, %lf\n",start.lng,start.lat,start.h);
     
