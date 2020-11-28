@@ -40,6 +40,7 @@ class Track:
             self.location(loc)
         self.view()
         self.rates(freq)
+        self.subsat()
 
     def location(self, name, lon=None, lat=None, alt=None):
         if isinstance(name, dict):
@@ -73,6 +74,10 @@ class Track:
             dd = self.doppler[i] - self.doppler[i-1]
             self.drift.append(dd/dt)
         self.drift[0] = self.drift[1]
+
+    def subsat(self):
+        self.lon = np.rad2deg(np.arctan2(self.y, self.x))
+        self.lat = np.rad2deg(np.arcsin(self.z / self.D))
 
     def waterfall(self, pwr=4.0*np.pi, Tsys=50.0, BW=2.0):
         self.Rxfreq = self.f + self.doppler
