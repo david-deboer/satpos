@@ -29,20 +29,17 @@ struct observer {
 	int daylightSavings;
 	struct satTime tstart;
 	struct satTime tstop;
-	struct satTime tnow;
 	double tstep;
-	double Xlam;
-	double Ylam;
-	double Zlam;
 };
 #else       /* generate DECLARATIONS */
 	#define CLASS extern
 	#define EQUALS(N)
 #endif
 
-enum {NOPRINT, YESPRINT, PRINTLABEL};
+#ifndef PI
+  #define PI (3.14159654)
+#endif
 
-#include "astroliblite.h"
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
@@ -56,10 +53,10 @@ enum {NOPRINT, YESPRINT, PRINTLABEL};
 int readObserver(struct observer *obs);
 int readLocation(struct observer *obs);
 int invxyz(double x, double y, double z, double *lng, double *lat, double *h);
-int otherTerms(struct observer obs, double jd, double *ro, struct observer *subsat,
-			   double *Az, double *El, double *RA, double *Dec);
+int otherTerms(struct observer obs, double jd, double *ro, struct observer *subsat);
 int writeFootprint(double lngs, double lats, double rsat);
 void addTime(struct satTime *base_t, struct satTime diff_t);
 void resetTime(struct satTime *t);
+int getline(FILE *fp, char *s, int lim);
 
 #endif

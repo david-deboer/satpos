@@ -15,12 +15,10 @@
 int main(int argc, char *argv[])
 {
 	int argSC=0, argTLE=0, i, j, k, n, valid;
-	long mcnt, nup;
-	int transit, printOutTransit;
     char TLEprefix[25], TLEFile[25], SCName[40], SCSearch[10], line[50];
     char outname[70], outsatpos[70];
-	double RA, HA, Dec, Az, El, dEl, dAz, oldel, oldaz, olddel, period;
-	double DOY, olddoy, jdday1, timeconv[3], lngconv[3];
+    const char * monstr[] = {"NULL", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+	double period, timeconv[3], lngconv[3];
 	double SCVector[15];
 	double w, cw, cDcH, cDsH, sD;
 	FILE *fp, *fpFringe, *fpTransit, *fpSubsat;
@@ -40,25 +38,11 @@ int main(int argc, char *argv[])
 	int  year, mon, day, hr, min;
 	char longstr1[130];
 	typedef char str3[4];
-	str3 monstr[13];
 	char longstr2[130];
 	elsetrec satrec;
 	
-	printOutTransit = PRINTLABEL;
 	rad = 180.0 / pi;
 	// ------------------------  implementation   --------------------------
-	strcpy(monstr[1], "Jan");
-	strcpy(monstr[2], "Feb");
-	strcpy(monstr[3], "Mar");
-	strcpy(monstr[4], "Apr");
-	strcpy(monstr[5], "May");
-	strcpy(monstr[6], "Jun");
-	strcpy(monstr[7], "Jul");
-	strcpy(monstr[8], "Aug");
-	strcpy(monstr[9], "Sep");
-	strcpy(monstr[10], "Oct");
-	strcpy(monstr[11], "Nov");
-	strcpy(monstr[12], "Dec");
 	
 	printf("%s\n", SGP4Version);
     if (argc > 1)
@@ -117,7 +101,6 @@ int main(int argc, char *argv[])
  
 	for(i=strlen(SCName)-1;isspace(SCName[i]);--i)
 		SCName[i]='\0';
-	//printf("\n\n%s\n%s\n%s\n\n",SCName,longstr1,longstr2);
     printf("\n%s\n",SCName);
 	readObserver(&obs);
 	
@@ -141,9 +124,6 @@ int main(int argc, char *argv[])
     sprintf(outname, "sp%s%04d.out", TLEprefix, k);
     outfile = fopen(outname, "w");
 	fpSubsat = fopen("subsat.out","w");
-	//fp   = fopen("predix.out","w");
-	//fpFringe = fopen("proFringe.out","w");
-	//fpTransit = fopen("transit.out","w");
     fprintf(outfile, "%d %s xx ", k, SCName);
 
 	// convert the char string to sgp4 elements
@@ -152,7 +132,6 @@ int main(int argc, char *argv[])
 			   startmfe, stopmfe, deltamin, satrec );
 
 	// This is pulled out of sgp4io.cpp to change the start/stop times
-    jday( obs.tstart.Year,1,0,0,0,0.0, jdday1 );
     jday( obs.tstart.Year,obs.tstart.Month,obs.tstart.Day,obs.tstart.Hour,obs.tstart.Minute,obs.tstart.Second,jdstart );
     jday( obs.tstop.Year,obs.tstop.Month,obs.tstop.Day,obs.tstop.Hour,obs.tstop.Minute,obs.tstop.Second, jdstop );
 	startmfe = (jdstart - satrec.jdsatepoch) * 1440.0;
@@ -172,23 +151,14 @@ int main(int argc, char *argv[])
 	// First do it for 'start'
 	tsince = (jdstart - satrec.jdsatepoch)*1440.0;
 	sgp4 (whichconst, satrec,  tsince, ro,  vo);
-	otherTerms(obs,jdstart,ro,&start,&Az,&El,&RA,&Dec);
+	otherTerms(obs,jdstart,ro,&start);
     period = 2.0*pi/satrec.no;
     fprintf(outfile, "  period = %12.9f min\n", period);
-    printf("Not doing all otherTerms and other stuff... (11/26/2020)\n");
+    printf("Period: %.3f [min]\n", period);
 	printf("Starting Position:\n\t(x,y,z,r):  %lf, %lf, %lf, %lf\n",ro[0],ro[1],ro[2],start.alt);
 	printf("\t(sub_lng, sub_lat, h, range):  %lf, %lf, %lf %lf\n",start.lng,start.lat,start.h,start.range);
-	//printf("\t(Az, El, RA, Dec):  %lf, %lf, %lf, %lf\n",Az,El,RA/15.0,Dec);
 	
 	// initialize variables
-	nup = 0;
-	mcnt = 0;
-	transit = 0;
-	dEl = 0.0;
-	dAz = 0.0;
-	oldel = 0.0;
-	oldaz = 0.0;
-	olddel = 0.0;
 	tsince = startmfe;
 	// check so the first value isn't written twice
 	if ( fabs(tsince) > 1.0e-8 )
@@ -208,8 +178,7 @@ int main(int argc, char *argv[])
 		{
 			jd = satrec.jdsatepoch + tsince/1440.0;
 			invjday( jd, year,mon,day,hr,min, sec );
-			DOY = jd - jdday1;
-			otherTerms(obs,jd,ro,&subsat,&Az,&El,&RA,&Dec);
+			otherTerms(obs,jd,ro,&subsat);
 			lngconv[1] = subsat.lng;
 			if (lngconv[0]!=999.9 && fabs(lngconv[1]-lngconv[0])>350.0) 
 			{
@@ -217,46 +186,6 @@ int main(int argc, char *argv[])
 			}
 			lngconv[0] = lngconv[1];
 			fprintf(fpSubsat,"%lf\t%lf\n",lngconv[1],subsat.lat);
-			/*if (El > obs.Horizon)
-			{
-				timeconv[0] = DOY + (obs.timeZone + obs.daylightSavings)/24.0;
-				timeconv[1] = hr + min/60.0 + sec/3600.0 + (obs.timeZone + obs.daylightSavings);
-				if (timeconv[1]>24.0) timeconv[1]-=24.0;
-				if (timeconv[1]<0.0) timeconv[1]+=24.0;
-				fprintf(fp,"%f\t%f\t%f\t%f\t%f\t%f\t%f\n",timeconv[0],timeconv[1],Az,El,subsat.range,dAz,dEl);
-				cDcH = cos(obs.lat/rad)*sin(El*pi/180.0) - sin(obs.lat/rad)*cos(El*pi/180.0)*cos(Az*pi/180.0);
-				cDsH = -1.0*cos(El*pi/180.0)*sin(Az*pi/180.0);
-				sD   = sin(obs.lat/rad)*sin(El*pi/180.0) + cos(obs.lat/rad)*cos(El*pi/180.0)*cos(Az*pi/180.0);
-				w = obs.Xlam*cDcH - obs.Ylam*cDsH + obs.Zlam*sD;
-				cw = cos(2.0*pi*w);
-				fprintf(fpFringe,"%lf\t%lf\t%lf\t%lf\n",timeconv[0],timeconv[1],w,cw);
-				if (mcnt>0L)
-				{
-					dEl = (El-oldel)/(DOY-olddoy)/(60.0*24.0); // Convert to deg/min 
-					dAz = (Az-oldaz)/(DOY-olddoy)/(60.0*24.0);
-					if (dEl == 0.0) transit = 1;
-					else if (olddel/dEl < 0.0) transit = 1;
-					else transit = 0;
-				}
-				if ( transit )
-				{
-					if (printOutTransit>NOPRINT)
-					{
-						if (printOutTransit==PRINTLABEL)
-						{
-							printf("\nSpacecraft                       day-of-year  time     Az [deg]  El [deg]   range [km]  dAz [deg/min]  dEl [deg/min]\n");
-							printOutTransit = YESPRINT;
-						}
-						printf("%20s transiting at %8.4lf  %7.4lf   %6.2lf     %5.2lf      %7.1lf     %.2lf          %.2lf\n",SCName,timeconv[0],timeconv[1],Az,El,subsat.range,dAz,dEl);
-					}
-					fprintf(fpTransit,"%lf\t%lf\t%lf\t%lf\t%lf\t%lf\t%lf\n",timeconv[0],timeconv[1],Az,El,subsat.range,dAz,dEl);
-				}
-				++nup;
-				oldaz = Az;
-				oldel = El;
-				olddel = dEl;
-				olddoy = DOY;
-			}*/
 			fprintf(outfile, " %16.8f %16.8f %16.8f %16.8f %12.9f %12.9f %12.9f",
 					tsince,ro[0],ro[1],ro[2],vo[0],vo[1],vo[2]);
             period = 2.0*pi/satrec.no;
@@ -264,30 +193,15 @@ int main(int argc, char *argv[])
 			fprintf(outfile, " %14.6f %8.6f %10.5f %10.5f %10.5f %10.5f %10.5f %5i%3i%3i %2i:%2i:%9.6f\n",
 					a, ecc, incl*rad, node*rad, argp*rad, nu*rad,
 					m*rad,year,mon,day,hr,min,sec);
-			++mcnt;
 		} // if satrec.error == 0
 	}
 
-	//printf("\n%s is up %g%% (%ld/%ld)\n",SCName, 100.0*( (double)nup )/( (double) mcnt ), nup, mcnt );
 	printf("\nOutput to:\n");
-	//printf("\tpredix.out\n");
-	//printf("\tproFringe.out\n");
-	//printf("\ttransit.out\n");
 	printf("\tsubsat.out\n");
-	printf("\tsatpos.out\n");
-	//fclose(fp);
-	//fclose(fpFringe);
-	//fclose(fpTransit);
+	printf("\t%s\n\n", outname);
 	fclose(fpSubsat);
 	fclose(outfile);
-	printf("\n");
 	writeFootprint(start.lng,start.lat,start.alt);
-	/*fp = fopen("info.out","w");
-	fprintf(fp,"%s | %s\n",obs.Name,SCName);
-	fprintf(fp,"%lf %lf\n",obs.lng,obs.lat);
-	fprintf(fp,"=%lf %lf\n",start.lng, start.lat);
-	fclose(fp);*/
-	//system("python pltSat.py");
 	
 	return 1;
 }
@@ -295,7 +209,7 @@ int main(int argc, char *argv[])
 /* Get observer and date data */
 int readObserver(struct observer *obs)
 {
-	int commentLine, nconv, timeZone;
+	int commentLine, nconv, timeZone, utcconv;
 	char line[300], code[8], *local_s;
 	time_t time_now;
 	tm *tm_now;
@@ -308,16 +222,12 @@ int readObserver(struct observer *obs)
 	//printf("%s",local_s);
 	tm_now = localtime(&time_now);
 	timeZone = tm_now->tm_hour;
-	//printf("System:\n");
-	//printf("\tLocal:  %02d:%02d:%02d   %02d/%02d/%d\n",tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec, tm_now->tm_mon+1, tm_now->tm_mday, tm_now->tm_year+1900);
 	tm_now = gmtime(&time_now);
 	timeZone-= tm_now->tm_hour;
 	if (timeZone > 12)
 		timeZone = timeZone - 24;
 	else if (timeZone < -12)
 		timeZone = timeZone + 24;
-	//printf("\tUTC:    %02d:%02d:%02d   %02d/%02d/%d\n",tm_now->tm_hour, tm_now->tm_min, tm_now->tm_sec, tm_now->tm_mon+1, tm_now->tm_mday, tm_now->tm_year+1900);
-	//printf("\tTimeZone:  %d\n",timeZone);
 	
 	///////////  Read input file
 	fp=fopen("satpos.cfg","r");
@@ -426,25 +336,12 @@ int readObserver(struct observer *obs)
 	}
 	sscanf(line,"%lf",&(obs->tstep));	
 
-	// baseline
-	commentLine = 1;
-	while (commentLine)
-	{
-		getline(fp,line,299);
-		if (line[0] != '#')
-			commentLine = 0;
-	}
-    fclose(fp);
-	sscanf(line,"%lf %lf %lf",&(obs->Xlam),&(obs->Ylam),&(obs->Zlam));
-
-	nconv = obs->timeZone + obs->daylightSavings;
-	//printf("Observing from %s\n\tlongitude = %.5f\n\tlatitude = %.5f\n\talt = %.2f m\n\thorizon = %.2f deg\n\n",obs->Name,obs->lng,obs->lat,obs->alt,obs->Horizon);
-	printf("Start (UTC@%d):       %02d/%02d/%02d  %02d:%02d:%02d\n",nconv,obs->tstart.Month,obs->tstart.Day,obs->tstart.Year,
+	utcconv = obs->timeZone + obs->daylightSavings;
+	printf("Start (UTC@%d):       %02d/%02d/%02d  %02d:%02d:%02d\n",utcconv,obs->tstart.Month,obs->tstart.Day,obs->tstart.Year,
 		   obs->tstart.Hour,obs->tstart.Minute,(int)obs->tstart.Second);
-	printf("Stop (UTC@%d):        %02d/%02d/%02d  %02d:%02d:%02d\n",nconv,obs->tstop.Month,obs->tstop.Day,obs->tstop.Year,
+	printf("Stop (UTC@%d):        %02d/%02d/%02d  %02d:%02d:%02d\n",utcconv,obs->tstop.Month,obs->tstop.Day,obs->tstop.Year,
 		   obs->tstop.Hour,obs->tstop.Minute,(int)obs->tstop.Second);
 	printf("Step:                 %.3lf [min]\n",obs->tstep);
-	//printf("Baseline distances:   %lf, %lf, %lf [wavelengths]\n\n",obs->Xlam,obs->Ylam,obs->Zlam);
 	return 1;
 }
 
@@ -635,19 +532,16 @@ int invxyz(double x, double y, double z, double *lng, double *lat, double *h)
 	return 1;
 }
 
-int otherTerms(struct observer obs, double jd, double *ro, struct observer *subsat,
-			   double *Az, double *El, double *RA, double *Dec)
+int otherTerms(struct observer obs, double jd, double *ro, struct observer *subsat)
 {
 	int i,j,k;
 	double gmst, rad, TmpDbl[3], HA,lst;
 	double sslng, sslat, h, range, rsat;
-	struct GeoPosition pos;
 	double x, y, lmb;
 	
 	rad = 180.0/PI;
 	
 	gmst = gstime(jd);
-	lst = Time2LST(obs.lng,-99.9,jd,i,j,k);
 	
 	//rotate to TEME to PEF
 	TmpDbl[0] = ro[0];
@@ -663,18 +557,6 @@ int otherTerms(struct observer obs, double jd, double *ro, struct observer *subs
 	subsat->h = h;
 	subsat->alt = rsat;
 	
-	pos.Longitude = obs.lng;
-	pos.Latitude = obs.lat;
-	pos.Altitude = obs.alt;
-	
-	/* Commenting out 11/25/20 to get working...
-    subazel(subsat->lng,subsat->lat,Az,El,&range,rsat,&pos);
-	subsat->range = range;
-	Eq2Hor(*Az,*El,&HA,Dec,obs.lat);
-	*RA = 15.0*lst - HA;
-	while (*RA < 0.0)
-		*RA+=360.0;
-	*/
 	return 1;
 }
 
@@ -692,19 +574,34 @@ int writeFootprint(double lngs, double lats, double rsat)
 	{
 		cll = cg/cos(latf)/cos(lats) - tan(latf)*tan(lats);
 		lngf = lngs - acos(cll);
-		fprintf(fp,"%lf\t%lf\tup\n",lngf*180.0/PI,latf*180.0/PI);
+		//fprintf(fp,"%lf\t%lf\tup\n",lngf*180.0/PI,latf*180.0/PI);
+        fprintf(fp,"%lf\t%lf\n",lngf*180.0/PI,latf*180.0/PI);
 	}
 	for (latf=lats+g-1.0E-6; latf>lats-g; latf-=0.01)
 	{
 		cll = cg/cos(latf)/cos(lats) - tan(latf)*tan(lats);
 		lngf = lngs + acos(cll);
-		fprintf(fp,"%lf\t%lf\tdn\n",lngf*180.0/PI,latf*180.0/PI);
+		//fprintf(fp,"%lf\t%lf\tdn\n",lngf*180.0/PI,latf*180.0/PI);
+        fprintf(fp,"%lf\t%lf\n",lngf*180.0/PI,latf*180.0/PI);
 	}
 	latf=lats-g+1.0E-6;
 	cll = cg/cos(latf)/cos(lats) - tan(latf)*tan(lats);
 	lngf = lngs - acos(cll);
-	fprintf(fp,"%lf\t%lf\tup\n",lngf*180.0/PI,latf*180.0/PI);
+	//fprintf(fp,"%lf\t%lf\tup\n",lngf*180.0/PI,latf*180.0/PI);
+    fprintf(fp,"%lf\t%lf\n",lngf*180.0/PI,latf*180.0/PI);
 	fclose(fp);
 	return 1;
 }
 		
+/*Return length of line*/
+int getline(FILE *fp, char *s, int lim)
+{
+      char c;
+      int i;
+
+      for (i=0;i<lim-2 && (c=getc(fp))!=EOF && c!='\n';++i)
+          s[i] = c;
+
+      s[i] = '\0';
+      return (i);
+}
