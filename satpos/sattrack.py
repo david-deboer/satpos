@@ -93,11 +93,12 @@ class Track:
 
     def subsat(self):
         self.lon = np.rad2deg(np.arctan2(self.y, self.x))
-        self.rsat = self.z / np.sqrt(self.x**2 + self.y**2 + self.z**2)
-        self.lat = np.rad2deg(np.arcsin(self.rsat))
+        self.rsat = np.sqrt(self.x**2 + self.y**2 + self.z**2)
+        r = self.z / self.rsat
+        self.lat = np.rad2deg(np.arcsin(r))
 
-    def get_footprint(self, i):
-        self.footprint = footprint(self.lon[i], self.lat[i], self.rsat[i])
+    def footprint(self, i):
+        return np.array(footprint(self.lon[i], self.lat[i], self.rsat[i]))
 
     def waterfall(self, pwr=4.0*np.pi, Tsys=50.0, BW=2.0):
         self.Rxfreq = self.f + self.doppler
@@ -123,16 +124,16 @@ def footprint(lngs, lats, rsat):
     cg = REARTH/rsat
     g = np.arccos(cg)
     footprint = []
-    for latf in np.arange(lats-g+1.0E-6, lats+g, 0.01):
+    for latf in np.arange(lats-g, lats+g, 0.01):
         cll = cg/np.cos(latf)/np.cos(lats) - np.tan(latf)*np.tan(lats)
         lngf = lngs - np.arccos(cll)
-        footprint.append([np.deg2rad(lngf), np.deg2rad(latf)])
-    for latf in np.arange(lats+g-1.0E-6, lats-g, 0.01):
+        footprint.append([np.rad2deg(lngf), np.rad2deg(latf)])
+    for latf in np.arange(lats+g, lats-g, -0.01):
         cll = cg/np.cos(latf)/np.cos(lats) - np.tan(latf)*np.tan(lats)
         lngf = lngs + np.arccos(cll)
-        footprint.append([np.deg2rad(lngf), np.deg2rad(latf)])
-    latf = lats-g+1.0E-6
+        footprint.append([np.rad2deg(lngf), np.rad2deg(latf)])
+    latf = lats-g
     cll = cg/np.cos(latf)/np.cos(lats) - np.tan(latf)*np.tan(lats)
     lngf = lngs - np.arccos(cll)
-    footprint.append([np.deg2rad(lngf), np.deg2rad(latf)])
+    footprint.append([np.rad2deg(lngf), np.rad2deg(latf)])
     return footprint

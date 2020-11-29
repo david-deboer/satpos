@@ -33,7 +33,13 @@ def find_viewable(loc, rng=None, trackfilelist='ls.out'):
     notviewable.close()
 
 
-def generate_check_all_sh():
+def generate_check_all(fname, tot):
+    with open('check_all.sh', 'w') as fp:
+        for i in range(tot):
+            print(f"satpos {fname} {i+1}", file=fp)
+
+
+def generate_complete_set():
     satellites = {}
     sats_by_file = {}
     total_count = 0
@@ -71,13 +77,8 @@ def generate_check_all_sh():
                 satdes = '{}:{}'.format(this_sat, satellites[this_sat]['scname'])
                 sats_by_file[fname].append(satdes)
                 break
-
     with open('tle/completeset.tle', 'w') as fp:
         for this_sat in satellites.keys():
             print(satellites[this_sat]['line0'], file=fp)
             print(satellites[this_sat]['line1'], file=fp)
             print(satellites[this_sat]['line2'], file=fp)
-
-    with open('check_all.sh', 'w') as fp:
-        for i in range(len(satellites.keys())):
-            print("./satpos completeset {}".format(i+1), file=fp)
