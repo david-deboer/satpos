@@ -18,21 +18,27 @@ def find_viewable(loc, rng=None, trackfilelist='ls.out'):
             s.view()
             if s.period > 1500.0:
                 count.deep += 1
+                orbit = 'deep'
             elif s.period < 1450.0 and s.period > 1420.0:
                 count.geo += 1
+                orbit = 'geo'
             elif s.period < 1000.0 and s.period > 500.0:
                 count.meo += 1
+                orbit = 'meo'
             elif s.period < 200.0:
                 count.leo += 1
+                orbit = 'leo'
             else:
                 count.other += 1
+                orbit = 'other'
             try:
                 szamin = s.za.min()
                 szamax = s.za.max()
             except ValueError:
                 szamin = '!'
                 szamax = '!'
-            pline = f"{line.strip()},{s.scname},{s.satnum},{s.period},{s.sublon},{szamin},{szamax}"
+            fn = line.strip().split('.')[0]
+            pline = f"{fn},{s.scname},{s.satnum},{orbit},{s.period},{s.sublon},{szamin},{szamax}"
             if s.viewable:
                 print(pline, file=viewable)
                 count.viewable += 1
