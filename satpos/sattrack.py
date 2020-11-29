@@ -53,9 +53,8 @@ class Track:
                         continue
                     break
 
-    def calc(self, freq, loc):
-        self.location(loc)
-        self.view()
+    def calc(self, loc, freq):
+        self.view(loc)
         self.rates(freq)
         self.subsat()
 
@@ -65,7 +64,9 @@ class Track:
                              y=self.location.loc.y.value,
                              z=self.location.loc.z.value)
 
-    def view(self):
+    def view(self, name=None, lon=None, lat=None, alt=None):
+        if name is not None:
+            self.location(name, lon, lat, alt)
         self.R = Namespace(x=(self.x-self.loc.x),
                            y=(self.y-self.loc.y),
                            z=(self.z-self.loc.z))

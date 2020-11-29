@@ -13,9 +13,9 @@ def find_viewable(loc, rng=None, trackfilelist='ls.out'):
             if rng is not None:
                 if i < rng[0] or i > rng[1]-1:
                     continue
-            s = sattrack.Track(join('output', line.strip()))
-            s.location(loc)
-            s.view()
+            fname = line.strip()
+            s = sattrack.Track(join('output', fname))
+            s.view(loc)
             if s.period > 1500.0:
                 count.deep += 1
                 orbit = 'deep'
@@ -37,8 +37,8 @@ def find_viewable(loc, rng=None, trackfilelist='ls.out'):
             except ValueError:
                 szamin = '!'
                 szamax = '!'
-            fn = line.strip().split('.')[0]
-            pline = f"{fn},{s.scname},{s.satnum},{orbit},{s.period},{s.sublon},{szamin},{szamax}"
+            fnp = fname.split('.')[0]
+            pline = f"{fnp},{s.scname},{s.satnum},{orbit},{s.period},{s.sublon},{szamin},{szamax}"
             if s.viewable:
                 print(pline, file=viewable)
                 count.viewable += 1
