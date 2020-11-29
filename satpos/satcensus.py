@@ -58,13 +58,15 @@ def generate_check_all(fname, tot):
             print(f"satpos {fname} {i+1}", file=fp)
 
 
-def generate_complete_set(master='tle/master.dat'):
+def generate_complete_set(path='tle', fmname='master.dat'):
+    import os.path
     satellites = {}
     sats_by_file = {}
     total_count = 0
-    with open(master, 'r') as fp:
+    flistname = os.path.join(path, fmname)
+    with open(flistname, 'r') as fp:
         for line in fp:
-            fname = f"tle/{line.split(':')[0]}"
+            fname = os.path.join(path, f"{line.split(':')[0]}")
             sats_by_file[fname] = []
             with open(fname, 'r') as fptle:
                 for tleline in fptle:
