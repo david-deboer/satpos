@@ -22,7 +22,7 @@ def find_viewable(loc, rng=None, trackfilelist='ls.out'):
             except ValueError:
                 szamin = '!'
                 szamax = '!'
-            pline = f"{line.strip()}|{s.header}|{szamin}|{szamax}"
+            pline = f"{line.strip()}|{s.scname},{s.satnum},{s.period},{s.sublon},{szamin},{szamax}"
             if s.viewable:
                 print(pline, file=viewable)
             else:
