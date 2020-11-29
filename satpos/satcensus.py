@@ -32,7 +32,7 @@ def find_viewable(loc, rng=None, trackfilelist='ls.out'):
             except ValueError:
                 szamin = '!'
                 szamax = '!'
-            pline = f"{line.strip()}|{s.scname},{s.satnum},{s.period},{s.sublon},{szamin},{szamax}"
+            pline = f"{line.strip()},{s.scname},{s.satnum},{s.period},{s.sublon},{szamin},{szamax}"
             if s.viewable:
                 print(pline, file=viewable)
                 count.viewable += 1
@@ -58,11 +58,11 @@ def generate_check_all(fname, tot):
             print(f"satpos {fname} {i+1}", file=fp)
 
 
-def generate_complete_set():
+def generate_complete_set(master='tle/master.dat'):
     satellites = {}
     sats_by_file = {}
     total_count = 0
-    with open('tle/master.dat', 'r') as fp:
+    with open(master, 'r') as fp:
         for line in fp:
             fname = f"tle/{line.split(':')[0]}"
             sats_by_file[fname] = []
