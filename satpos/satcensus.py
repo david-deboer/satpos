@@ -4,8 +4,11 @@ from argparse import Namespace
 def find_viewable(loc, rng=None, trackfilelist='ls.out'):
     from satpos import sattrack
     from os.path import join
-    viewable = open('viewable.out', 'w')
-    notviewable = open('notviewable.out', 'w')
+    viewable = open('viewable.csv', 'w')
+    notviewable = open('notviewable.csv', 'w')
+    hdrstr = "file,scname,satnum,orbit,period,sublon,szamin,szamax"
+    print(hdrstr, file=viewable)
+    print(hdrstr, file=notviewable)
     count = Namespace(leo=0, meo=0, geo=0, deep=0, other=0, viewable=0, notviewable=0)
     with open(trackfilelist, 'r') as fp:
         i = 0
