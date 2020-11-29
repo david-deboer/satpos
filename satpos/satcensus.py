@@ -14,7 +14,7 @@ def find_viewable(loc, rng=None, trackfilelist='ls.out'):
             s.location(loc)
             s.view()
             if s.period > 1420.0:
-                print(f"{s.viewable}  GEO+: {s.header}")
+                print(f"{s.viewable}  GEO+: {s.period}, {s.sublon}")
                 count_geo += 1
             try:
                 szamin = s.za.min()
