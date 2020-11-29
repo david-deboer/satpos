@@ -54,7 +54,6 @@ int readObserver(struct observer *obs);
 int readLocation(struct observer *obs);
 int invxyz(double x, double y, double z, double *lng, double *lat, double *h);
 int otherTerms(struct observer obs, double jd, double *ro, struct observer *subsat);
-int writeFootprint(double lngs, double lats, double rsat);
 void addTime(struct satTime *base_t, struct satTime diff_t);
 void resetTime(struct satTime *t);
 int getline(FILE *fp, char *s, int lim);

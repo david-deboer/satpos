@@ -159,8 +159,8 @@ int main(int argc, char *argv[])
     fprintf(outfile, "#line1: %s\n", longstr1);
     fprintf(outfile, "#line2: %s\n", longstr2);
     fprintf(outfile, "#period: %12.9f min\n", period);
-    fprintf(outfile, "#starting x,y,z,r: %lf, %lf, %lf, %lf\n",ro[0],ro[1],ro[2],start.alt);
-    fprintf(outfile, "#starting lon,lat,h: %lf, %lf, %lf\n",start.lng,start.lat,start.h);
+    fprintf(outfile, "#starting x y z r: %lf %lf %lf %lf\n",ro[0],ro[1],ro[2],start.alt);
+    fprintf(outfile, "#starting lon lat h: %lf %lf %lf\n",start.lng,start.lat,start.h);
     
 	// initialize variables
 	tsince = startmfe;
@@ -560,39 +560,6 @@ int otherTerms(struct observer obs, double jd, double *ro, struct observer *subs
 	subsat->h = h;
 	subsat->alt = rsat;
 	
-	return 1;
-}
-
-int writeFootprint(double lngs, double lats, double rsat)
-{
-	double cg, g, latf, lngf, cll;
-	FILE *fp;
-	fp = fopen("footprint.out","w");
-	
-	lngs *= PI/180.0;
-	lats *= PI/180.0;
-	cg = 6378.0/rsat;
-	g = acos(cg);
-	for (latf=lats-g+1.0E-6; latf<lats+g; latf+=0.01)
-	{
-		cll = cg/cos(latf)/cos(lats) - tan(latf)*tan(lats);
-		lngf = lngs - acos(cll);
-		//fprintf(fp,"%lf\t%lf\tup\n",lngf*180.0/PI,latf*180.0/PI);
-        fprintf(fp,"%lf\t%lf\n",lngf*180.0/PI,latf*180.0/PI);
-	}
-	for (latf=lats+g-1.0E-6; latf>lats-g; latf-=0.01)
-	{
-		cll = cg/cos(latf)/cos(lats) - tan(latf)*tan(lats);
-		lngf = lngs + acos(cll);
-		//fprintf(fp,"%lf\t%lf\tdn\n",lngf*180.0/PI,latf*180.0/PI);
-        fprintf(fp,"%lf\t%lf\n",lngf*180.0/PI,latf*180.0/PI);
-	}
-	latf=lats-g+1.0E-6;
-	cll = cg/cos(latf)/cos(lats) - tan(latf)*tan(lats);
-	lngf = lngs - acos(cll);
-	//fprintf(fp,"%lf\t%lf\tup\n",lngf*180.0/PI,latf*180.0/PI);
-    fprintf(fp,"%lf\t%lf\n",lngf*180.0/PI,latf*180.0/PI);
-	fclose(fp);
 	return 1;
 }
 		
