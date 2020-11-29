@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     char outname[70], outsatpos[70];
     const char * monstr[] = {"NULL", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 	double period, timeconv[3], lngconv[3];
-	FILE *fp, *fpSubsat, *outfile;
+	FILE *fp, *outfile;
 	struct observer obs, subsat, start;
 	char str[2];
 	double ro[3];
@@ -119,7 +119,6 @@ int main(int argc, char *argv[])
 	// ---------------- setup files for operation ------------------
     sprintf(outname, "sp%s%04d.out", TLEprefix, k);
     outfile = fopen(outname, "w");
-	fpSubsat = fopen("subsat.out","w");
 
 	// convert the char string to sgp4 elements
 	// includes initialization of sgp4
@@ -189,7 +188,7 @@ int main(int argc, char *argv[])
 				lngconv[1] += 360.0;
 			}
 			lngconv[0] = lngconv[1];
-			fprintf(fpSubsat,"%lf\t%lf\n",lngconv[1],subsat.lat);
+			//fprintf(fpSubsat,"%lf\t%lf\n",lngconv[1],subsat.lat);
 			fprintf(outfile, " %16.8f %16.8f %16.8f %16.8f %12.9f %12.9f %12.9f",
 					tsince,ro[0],ro[1],ro[2],vo[0],vo[1],vo[2]);
 			rv2coe(ro, vo, mu, p, a, ecc, incl, node, argp, nu, m, arglat, truelon, lonper );
@@ -198,13 +197,8 @@ int main(int argc, char *argv[])
 					m*rad,year,mon,day,hr,min,sec);
 		} // if satrec.error == 0
 	}
-
-	printf("\nOutput to:\n");
-	printf("\tsubsat.out\n");
-	printf("\t%s\n\n", outname);
-	fclose(fpSubsat);
+	printf("\nOutput to %s\n", outname);
 	fclose(outfile);
-	//writeFootprint(start.lng,start.lat,start.alt);
 	
 	return 1;
 }

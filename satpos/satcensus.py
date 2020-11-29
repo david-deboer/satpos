@@ -1,5 +1,5 @@
 def find_viewable(loc, rng=None, trackfilelist='ls.out'):
-    import sattrack
+    from satpos import sattrack
     from os.path import join
     viewable = open('viewable.out', 'w')
     notviewable = open('notviewable.out', 'w')
