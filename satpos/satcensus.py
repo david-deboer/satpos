@@ -1,12 +1,33 @@
 from argparse import Namespace
+from satpos import sattrack
+from os.path import join
 
 
-def find_viewable(loc, rng=None, trackfilelist='ls.out'):
-    from satpos import sattrack
-    from os.path import join
+def filter_drift(loc, f=982e6, rng=[0.025, 0.04],
+                 trackfilelist='viewable.csv', path='output', addtag='out'):
+    outsats = open('outsats.csv', 'w')
+    with open(trackfilelist, 'r') as satslist:
+        for line in satslist:
+            data = line.strip().split(',')
+            if data[0] == 'file':
+                continue
+            fname = data[0]
+            if addtag is not None:
+                fname = f"{fname}.{addtag}"
+            fname = join(path, fname)
+            s = sattrack.Track(fname)
+            s.view(loc)
+            s.rates(f)
+            for i, drift in enumerate(s.drift):
+                if s.za < 90.0 and drift > rng[0] and drift < rng[1]:
+                    print(f"{fname},{s.satnum},{s.since[i]},{drift},{s.x[i]},{s.y[i]},{s.z[i]},"
+                          "{s.za[i]},{s.period}", file=outsats)
+
+
+def find_viewable(loc, rng=None, trackfilelist='ls.out', path='output'):
     viewable = open('viewable.csv', 'w')
     notviewable = open('notviewable.csv', 'w')
-    hdrstr = "file,scname,satnum,orbit,period,sublon,szamin,szamax"
+    hdrstr = "file,scname,satnum,orbit,period,sublon,zamin,zamax"
     print(hdrstr, file=viewable)
     print(hdrstr, file=notviewable)
     count = Namespace(leo=0, meo=0, geo=0, deep=0, other=0, viewable=0, notviewable=0)
@@ -17,7 +38,7 @@ def find_viewable(loc, rng=None, trackfilelist='ls.out'):
                 if i < rng[0] or i > rng[1]-1:
                     continue
             fname = line.strip()
-            s = sattrack.Track(join('output', fname))
+            s = sattrack.Track(join(path, fname))
             s.view(loc)
             if s.period > 1500.0:
                 count.deep += 1
@@ -35,13 +56,13 @@ def find_viewable(loc, rng=None, trackfilelist='ls.out'):
                 count.other += 1
                 orbit = 'other'
             try:
-                szamin = s.za.min()
-                szamax = s.za.max()
+                zamin = s.za.min()
+                zamax = s.za.max()
             except ValueError:
-                szamin = '!'
-                szamax = '!'
+                zamin = '!'
+                zamax = '!'
             fnp = fname.split('.')[0]
-            pline = f"{fnp},{s.scname},{s.satnum},{orbit},{s.period},{s.sublon},{szamin},{szamax}"
+            pline = f"{fnp},{s.scname},{s.satnum},{orbit},{s.period},{s.sublon},{zamin},{zamax}"
             if s.viewable:
                 print(pline, file=viewable)
                 count.viewable += 1
