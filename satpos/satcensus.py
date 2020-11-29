@@ -66,7 +66,7 @@ def generate_complete_set(path='tle', fmname='master.dat'):
     flistname = os.path.join(path, fmname)
     with open(flistname, 'r') as fp:
         for line in fp:
-            fname = os.path.join(path, f"{line.split(':')[0]}")
+            fname = os.path.join(path, f"{line.strip().split(':')[0]}")
             sats_by_file[fname] = []
             with open(fname, 'r') as fptle:
                 for tleline in fptle:
