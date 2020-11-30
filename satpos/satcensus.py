@@ -25,7 +25,7 @@ def filter_drift(loc, f=982e6, rng=[0.025, 0.04],
                     drifts[s.satnum].t.append(s.since[i])
                     drifts[s.satnum].drift.append(drift)
                     drifts[s.satnum].za.append(s.za[i])
-                    drifts[s.satnum].period.append(s.period[i])
+                    drifts[s.satnum].period.append(s.period)
                     print(f"{fname},{s.satnum},{s.since[i]},{drift},{s.x[i]},{s.y[i]},{s.z[i]},"
                           f"{s.za[i]},{s.period}", file=outsats)
     outsats.close()
