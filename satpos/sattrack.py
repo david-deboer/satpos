@@ -4,7 +4,6 @@ from my_ephem import ephem
 
 
 C = 3E8
-KB = 1.38E-23
 REARTH = 6371.0E3
 
 
@@ -82,7 +81,7 @@ class Track:
         return varr
 
     def rates(self, f=982E6):
-        self.f = f
+        self.freq = f
         self.V = (self.vx*self.R.x + self.vy*self.R.y + self.vx*self.R.z) / self.D
         self.doppler = (np.array(self.V) / C) * f
         self.drift = [0.0]
@@ -102,7 +101,7 @@ class Track:
         return np.array(footprint(self.lon[i], self.lat[i], self.rsat[i]))
 
     def waterfall(self, pwr=4.0*np.pi, Tsys=50.0, BW=2.0):
-        self.Rxfreq = self.f + self.doppler
+        self.Rxfreq = self.freq + self.doppler
         self.Rxpwr = self.vis(pwr / (4.0 * np.pi * self.D**2))
         ds2 = (self.doppler.max() - self.doppler.min()) / 2.0
         numch = int(np.ceil((self.Rxfreq.max() - self.Rxfreq.min() + 2.0*ds2)/BW))

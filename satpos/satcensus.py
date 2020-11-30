@@ -6,6 +6,7 @@ from os.path import join
 def filter_drift(loc, f=982e6, rng=[0.025, 0.04],
                  trackfilelist='viewable.csv', path='output', addtag='out'):
     outsats = open('outsats.csv', 'w')
+    drifts = {}
     with open(trackfilelist, 'r') as satslist:
         for line in satslist:
             data = line.strip().split(',')
@@ -19,9 +20,16 @@ def filter_drift(loc, f=982e6, rng=[0.025, 0.04],
             s.view(loc)
             s.rates(f)
             for i, drift in enumerate(s.drift):
-                if s.za < 90.0 and drift > rng[0] and drift < rng[1]:
+                if s.za[i] < 90.0 and drift > rng[0] and drift < rng[1]:
+                    drifts.setdefault(s.satnum, Namespace(t=[], drift=[], za=[], period=[]))
+                    drifts[s.satnum].t.append(s.since[i])
+                    drifts[s.satnum].drift.append(drift)
+                    drifts[s.satnum].za.append(s.za[i])
+                    drifts[s.satnum].period.append(s.period[i])
                     print(f"{fname},{s.satnum},{s.since[i]},{drift},{s.x[i]},{s.y[i]},{s.z[i]},"
-                          "{s.za[i]},{s.period}", file=outsats)
+                          f"{s.za[i]},{s.period}", file=outsats)
+    outsats.close()
+    return drifts
 
 
 def find_viewable(loc, rng=None, trackfilelist='ls.out', path='output'):
